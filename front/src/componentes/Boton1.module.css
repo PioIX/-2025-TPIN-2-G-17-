@@ -1,0 +1,27 @@
+.wpp {
+    background-color: #6f82ee;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.wpp:hover{
+    background-color: #3c4579;
+}
+
+.eliminar {
+    background-color: #ee6f6f;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.eliminar:hover{
+    background-color: #913f3f;
+}
