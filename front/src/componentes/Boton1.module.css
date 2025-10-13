@@ -8,7 +8,8 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
-.wpp:hover{
+
+.wpp:hover {
     background-color: #3c4579;
 }
 
@@ -22,6 +23,82 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
-.eliminar:hover{
+
+.eliminar:hover {
     background-color: #913f3f;
+}
+
+.famosos {
+    background-color: #ffbd59;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.famosos:hover {
+    background-color: #b3783a;
+}
+
+.scaloneta {
+    background-color: #5ce1e6;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.scaloneta:hover {
+    background-color: #3e9b9e;
+}
+
+.profesores {
+    background-color: #5e95bb;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.profesores:hover {
+    background-color: #43637a;
+}
+
+.farandula {
+    background-color: #ff3131;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.farandula:hover {
+    background-color: #b22424;
+}
+
+.cantantes {
+    background-color: #ff751f;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.cantantes:hover {
+    background-color: #b24f17;
 }

@@ -1,0 +1,45 @@
+.registro{
+    border-color: #9591ae;
+    color: #9591ae;
+    border: 1px solid #9591ae;
+    border-radius: 8px;
+    padding: 0.8rem;
+    font-size: 1rem;
+}
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f0f0f0;       
+  border-top: 1px solid #ccc;
+  position: sticky;          
+  bottom: 0;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 20px;       
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+}
+
+.chat-input button {
+  background: #128C7E;       
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 50%;        
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-input button:hover {
+  background: #075E54;       
+}
