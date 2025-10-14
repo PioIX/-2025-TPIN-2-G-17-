@@ -8,6 +8,11 @@ export default function Boton(props) {
                 {
                     [styles.wpp]: props.color == "wpp", 
                     [styles.eliminar]: props.color == "eliminar", 
+                    [styles.famosos]: props.color == "famosos", 
+                    [styles.scaloneta]: props.color == "scaloneta", 
+                    [styles.profesores]: props.color == "profesores", 
+                    [styles.farandula]: props.color == "farandula", 
+                    [styles.cantantes]: props.color == "cantantes", 
                 }
             )
         }>{props.texto}</button>
