@@ -4,6 +4,13 @@
     text-align: center;
     color: white;
 }
+.footer {
+    background-color: #e69af5;
+    padding: 20px 0;
+    text-align: center;
+    color: white;
+    margin-top: 15%;
+}
 .container {
     max-width: 400px;
     margin: 40px auto;
@@ -12,6 +19,7 @@
     display: grid;
     gap: 15px;
     grid-template-columns: 1fr;
+
 }
 
 .title {

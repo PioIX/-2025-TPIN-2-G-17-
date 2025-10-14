@@ -40,6 +40,12 @@ export default function LoginPage() {
                 <Boton texto={"Farandula"} color={"farandula"} onClick={irFarandula} />
                 <Boton texto={"Cantantes"} color={"cantantes"} onClick={irCantantes} />
             </div>
+            <div className={styles.footer}>
+                <footer>
+                    <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
+                </footer>
+
+            </div>
         </>
     )
 }
