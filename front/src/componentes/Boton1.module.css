@@ -31,7 +31,7 @@
 .famosos {
     background-color: #ffbd59;
     color: white;
-    padding: 10px 16px;
+    padding: 25px 16px;
     border: none;
     border-radius: 8px;
     font-size: 16px;
@@ -46,7 +46,7 @@
 .scaloneta {
     background-color: #5ce1e6;
     color: white;
-    padding: 10px 16px;
+    padding: 25px 16px;
     border: none;
     border-radius: 8px;
     font-size: 16px;
@@ -61,7 +61,7 @@
 .profesores {
     background-color: #5e95bb;
     color: white;
-    padding: 10px 16px;
+    padding: 25px 16px;
     border: none;
     border-radius: 8px;
     font-size: 16px;
@@ -76,7 +76,7 @@
 .farandula {
     background-color: #ff3131;
     color: white;
-    padding: 10px 16px;
+    padding: 25px 16px;
     border: none;
     border-radius: 8px;
     font-size: 16px;
@@ -91,7 +91,7 @@
 .cantantes {
     background-color: #ff751f;
     color: white;
-    padding: 10px 16px;
+    padding: 25px 16px;
     border: none;
     border-radius: 8px;
     font-size: 16px;
