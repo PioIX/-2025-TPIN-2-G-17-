@@ -52,11 +52,6 @@ export default function Tablero() {
                         onClick={() => handleClick(p.id)}
                     />
                 ))}
-
-            </div>
-            <div className={styles.botonesRespuestas}>
-                <Boton color={"si"} texto={"Sí"} />
-                <Boton color={"no"} texto={"No"} />
             </div>
             <div className={styles.footer}>
                 <footer>

@@ -13,12 +13,13 @@ export default function Boton(props) {
                     [styles.profesores]: props.color == "profesores", 
                     [styles.farandula]: props.color == "farandula", 
                     [styles.cantantes]: props.color == "cantantes", 
+                    [styles.si]: props.color == "si",
+                    [styles.no]: props.color == "no", 
                 }
             )
         }>{props.texto}</button>
     );
 }
-
 
 
 
