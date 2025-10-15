@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS Usuarios;
 CREATE TABLE Categorias (
     ID INT NOT NULL AUTO_INCREMENT,
     nombre VARCHAR(255),
-    PRIMARY KEY (ID)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE Personajes (
@@ -13,7 +13,7 @@ CREATE TABLE Personajes (
     nombre VARCHAR(255),
     foto VARCHAR(255),
     categoria_id INT,
-    PRIMARY KEY (ID),
+    PRIMARY KEY (id),
     FOREIGN KEY (categoria_id) REFERENCES Categorias(ID)
 );
 
@@ -24,5 +24,5 @@ CREATE TABLE Usuarios(
     mail VARCHAR(255),
     puntaje INT,
     es_admin BOOL,
-    PRIMARY KEY (ID)
+    PRIMARY KEY (id)
 );
