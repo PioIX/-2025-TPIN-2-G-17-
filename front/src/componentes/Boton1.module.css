@@ -102,3 +102,34 @@
 .cantantes:hover {
     background-color: #b24f17;
 }
+
+.si{
+    background-color: #6af7c1;
+    color: white;
+    padding: 25px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    
+}
+
+.si:hover {
+    background-color: #4caa86
+}
+
+.no{
+    background-color: #ffbde3;
+    color: white;
+    padding: 25px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.no:hover {
+    background-color: #b67e9f
+}

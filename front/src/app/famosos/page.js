@@ -34,7 +34,6 @@ export default function Tablero() {
         { id: 20, imagen: "/Guida Kaczka.png", texto: "Guido Kaczka" },
     ];
 
-
     return (
         <>
             <div className={styles.header}>
@@ -52,11 +51,7 @@ export default function Tablero() {
                         onClick={() => handleClick(p.id)}
                     />
                 ))}
-
-            </div>
-            <div className={styles.botonesRespuestas}>
-                <Boton color={"si"} texto={"Sí"} />
-                <Boton color={"no"} texto={"No"} />
+                <Boton color={"no"}></Boton> <Boton color={"si"}></Boton>
             </div>
             <div className={styles.footer}>
                 <footer>

@@ -3,26 +3,34 @@
 import Boton from "@/componentes/Boton"
 import Input from "@/componentes/Input"
 import Title from "@/componentes/Title"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import styles from "./page.module.css"
+import { useSocket } from "@/hooks/useSocket";
 
 export default function LoginPage() {
     const router = useRouter()
+    const { socket } = useSocket();
+
     const irFamosos = () => {
         router.push("/famosos");
+        socket.emit("joinRoom", { room: "famosos" });
     };
     const irScaloneta = () => {
         router.push("/scaloneta");
+        socket.emit("joinRoom", { room: "scaloneta" });
     };
     const irProfesores = () => {
         router.push("/profesores");
+        socket.emit("joinRoom", { room: "profesores" });
     };
     const irFarandula = () => {
         router.push("/farandula");
+        socket.emit("joinRoom", { room: "farandula" });
     };
     const irCantantes = () => {
         router.push("/cantantes");
+        socket.emit("joinRoom", { room: "cantantes" });
     };
 
     return (
