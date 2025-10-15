@@ -422,3 +422,80 @@ app.post('/encontrarMensajesChat', async (req, res) => {
         res.status(500).send({ ok: false, mensaje: "Error en el servidor", error: error.message });
     }
 });
+
+
+//PEDIDOS ADMIN
+
+app.post('/agregarUsuario', async function (req, res) {
+    console.log(req.body)
+    let vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre="${req.body.nombre}"`)
+    if (vector.length == 0) {
+        realizarQuery(`
+            INSERT INTO Usuarios (nombre, contraseña, mail, puntaje, es_admin) VALUES
+                ('${req.body.nombre}', '${req.body.contraseña}', '${req.body.mail}', 0, ${req.body.es_admin});
+            `)
+        res.send({ res: "ok" })
+        
+    } else {
+        res.send({ res: "Ya existe ese dato" })
+
+    }
+})
+
+
+//BORRAR USUARIO
+app.post('/borrarUsuario', async function (req, res) {
+    try {
+        const nombre = req.body.nombre;
+
+        const vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre='${nombre}'`);
+
+        if (vector.length > 0) {
+            await realizarQuery(`DELETE FROM Usuarios WHERE nombre='${nombre}'`);
+            res.send({ borrado: true, mensaje: "Usuario eliminado correctamente" });
+        } else {
+            res.send({ borrado: false, mensaje: "Usuario no encontrado" });
+        }
+
+    } catch (error) {
+        res.status(500).send({
+            borrado: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
+//Agregar autor
+app.post('/agregarAutor', async function (req, res) {
+    try {
+        const { nombre, apellido, origen, imagen } = req.body;
+
+        if (!nombre || !apellido || !origen || !imagen) {
+            return res.send({ ok: false, mensaje: "Faltan datos" });
+        }
+
+        await realizarQuery(`
+            INSERT INTO Autores (nombre, apellido, origen, imagen)
+            VALUES ('${nombre}', '${apellido}', '${origen}', '${imagen}');
+        `);
+
+        res.send({ ok: true, mensaje: "Autor agregado correctamente" });
+    } catch (error) {
+        console.error("Error al agregar autor:", error);
+        res.send({ ok: false, mensaje: "Error en el servidor", error: error.message });
+    }
+});
+
+//modificar frases
+app.put('/modificarFrase', async function(req, res) {
+    try {
+        await realizarQuery(`UPDATE Frases SET
+            contenido = '${req.body.contenido}', procedencia = '${req.body.procedencia}', id_autor = ${req.body.id_autor}, id_autor_incorrecto = ${req.body.id_autor_incorrecto} WHERE ID = ${req.body.id};`);
+
+        res.send({ ok: true, mensaje: "Frase modificada correctamente" });
+    } catch (e) {
+        console.log("ERROR:", e.message);
+        res.send({ ok: false, mensaje: "Error en la modificación", error: e.message });
+    }
+});
