@@ -1,17 +1,19 @@
 .juego {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    max-width: 600px;
-    margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
 }
+
 .header {
-    background-color: #e69af5;
-    padding: 20px 0;
-    text-align: center;
-    color: white;
-    margin-bottom: 5%;
+  background-color: #e69af5;
+  padding: 20px 0;
+  text-align: center;
+  color: white;
+  margin-bottom: 5%;
 }
+
 .footer {
   background-color: #e69af5;
   padding: 20px 0;
@@ -22,17 +24,28 @@
   left: 0;
   width: 100%;
 }
+
 .botonesRespuestas {
-  width: 100%;                
+  width: 100%;
   display: flex;
-  justify-content: center;   
+  justify-content: center;
   align-items: center;
-  gap: 30px;               
+  gap: 30px;
   margin-top: 40px;
 }
+
 .botonesRespuestas button {
-  min-width: 120px;   /* ancho mínimo cómodo */
-  padding: 12px 20px; /* agranda el botón visualmente */
+  min-width: 120px;
+  /* ancho mínimo cómodo */
+  padding: 12px 20px;
+  /* agranda el botón visualmente */
   font-size: 1.1rem;
   border-radius: 8px;
+}
+
+.botonesRespuestas {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
