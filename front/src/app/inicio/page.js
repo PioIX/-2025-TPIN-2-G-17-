@@ -26,6 +26,7 @@ export default function LoginPage() {
     };
     const irFarandula = () => {
         router.push("/farandula");
+        localStorage.setItem("room", "farandula")
         socket.emit("joinRoom", { room: "farandula" });
     };
     const irCantantes = () => {

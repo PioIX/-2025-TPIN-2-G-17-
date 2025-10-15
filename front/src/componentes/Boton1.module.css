@@ -104,7 +104,7 @@
 }
 
 .si{
-    background-color: #6af7c1;
+    background-color: #3bd662;
     color: white;
     padding: 25px 16px;
     border: none;
@@ -116,11 +116,11 @@
 }
 
 .si:hover {
-    background-color: #4caa86
+    background-color: #247e3b
 }
 
 .no{
-    background-color: #ffbde3;
+    background-color: #eb2f2f;
     color: white;
     padding: 25px 16px;
     border: none;
@@ -131,5 +131,5 @@
 }
 
 .no:hover {
-    background-color: #b67e9f
+    background-color: #7c1919
 }
