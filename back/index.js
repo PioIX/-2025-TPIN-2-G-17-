@@ -212,7 +212,7 @@ app.post("/agregarChat", async function (req, res) {
         let chatId;
 
         if (req.body.es_grupo == 1) {
-            const nombre = req.body.nombre ?? "Grupo sin nombre"; 
+            const nombre = req.body.nombre ?? "Grupo sin nombre";
             // Insertar el grupo
             const resultado = await realizarQuery(`
         
@@ -427,31 +427,41 @@ app.post('/encontrarMensajesChat', async (req, res) => {
 //PEDIDOS ADMIN
 
 app.post('/agregarUsuario', async function (req, res) {
-    console.log(req.body)
-    let vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre="${req.body.nombre}"`)
-    if (vector.length == 0) {
-        realizarQuery(`
-            INSERT INTO Usuarios (nombre, contraseña, mail, puntaje, es_admin) VALUES
-                ('${req.body.nombre}', '${req.body.contraseña}', '${req.body.mail}', 0, ${req.body.es_admin});
-            `)
-        res.send({ res: "ok" })
-        
-    } else {
-        res.send({ res: "Ya existe ese dato" })
+    console.log(req.body);
 
+    try {
+        const { nombre, contraseña, mail, es_admin } = req.body;
+
+        // Verificar si ya existe el usuario
+        const vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre = "${nombre}"`);
+
+        if (vector.length === 0) {
+            await realizarQuery(`
+                INSERT INTO Usuarios (nombre, contraseña, mail, puntaje, es_admin)
+                VALUES ("${nombre}", "${contraseña}", "${mail}", 0, ${es_admin});
+            `);
+            res.send({ agregado: true });
+        } else {
+            res.send({ agregado: false, mensaje: "Ya existe ese usuario" });
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ agregado: false, error: "Error en el servidor" });
     }
-})
+});
+
 
 
 //BORRAR USUARIO
-app.post('/borrarUsuario', async function (req, res) {
+app.delete('/borrarUsuario', async function (req, res) {
     try {
-        const nombre = req.body.nombre;
+        const ID = req.body.ID;
 
-        const vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre='${nombre}'`);
+        const vector = await realizarQuery(`SELECT * FROM Usuarios WHERE ID='${ID}'`);
 
         if (vector.length > 0) {
-            await realizarQuery(`DELETE FROM Usuarios WHERE nombre='${nombre}'`);
+            await realizarQuery(`DELETE FROM Usuarios WHERE ID='${ID}'`);
             res.send({ borrado: true, mensaje: "Usuario eliminado correctamente" });
         } else {
             res.send({ borrado: false, mensaje: "Usuario no encontrado" });
@@ -488,7 +498,7 @@ app.post('/agregarAutor', async function (req, res) {
 });
 
 //modificar frases
-app.put('/modificarFrase', async function(req, res) {
+app.put('/modificarFrase', async function (req, res) {
     try {
         await realizarQuery(`UPDATE Frases SET
             contenido = '${req.body.contenido}', procedencia = '${req.body.procedencia}', id_autor = ${req.body.id_autor}, id_autor_incorrecto = ${req.body.id_autor_incorrecto} WHERE ID = ${req.body.id};`);
