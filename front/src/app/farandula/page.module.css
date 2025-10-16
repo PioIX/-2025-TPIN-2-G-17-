@@ -49,3 +49,27 @@
   justify-content: center;
   align-items: center;
 }
+/*corregir*/
+.chatBox {
+  width: 100%;
+  max-width: 600px;
+  margin: 30px auto;
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  padding: 15px;
+  height: 150px;
+  overflow-y: auto; 
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mensaje {
+  background-color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+

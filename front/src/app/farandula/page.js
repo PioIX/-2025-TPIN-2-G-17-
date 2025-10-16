@@ -14,22 +14,22 @@ export default function Tablero() {
     const { socket, isConnected } = useSocket();
     const personajes = [
         { id: 1, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 2, imagen: "/Bomba Tucumana.png", texto: "Bomba Tucumana" },
+        { id: 2, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
         { id: 3, imagen: "/China Suarez.png", texto: "China Suarez" },
         { id: 4, imagen: "/Flor de la V.png", texto: "Flor de la V" },
         { id: 5, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
         { id: 6, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 7, imagen: "/Bomba Tucumana.png", texto: "Bomba Tucumana" },
+        { id: 7, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
         { id: 8, imagen: "/China Suarez.png", texto: "China Suarez" },
         { id: 9, imagen: "/Flor de la V.png", texto: "Flor de la V" },
         { id: 10, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
         { id: 11, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 12, imagen: "/Bomba Tucumana.png", texto: "Bomba Tucumana" },
+        { id: 12, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
         { id: 13, imagen: "/China Suarez.png", texto: "China Suarez" },
         { id: 14, imagen: "/Flor de la V.png", texto: "Flor de la V" },
         { id: 15, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
         { id: 16, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 17, imagen: "/Bomba Tucumana.png", texto: "Bomba Tucumana" },
+        { id: 17, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
         { id: 18, imagen: "/China Suarez.png", texto: "China Suarez" },
         { id: 19, imagen: "/Flor de la V.png", texto: "Flor de la V" },
         { id: 20, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
@@ -39,22 +39,31 @@ export default function Tablero() {
 
     useEffect(() => {
         if (!socket) return;
+
         socket.on("newMessage", (data) => {
-            console.log(data);
+            console.log("📩 Nuevo mensaje:", data);
+            setMensajes((prev) => [...prev, data]);
         });
+
+        return () => {
+            socket.off("newMessage");
+        };
     }, [socket]);
+
 
     function sendMessage() {
         socket.emit("sendMessage", { message });
         console.log({ message })
     }
-    useEffect(()=>{
+    useEffect(() => {
         if (!socket) return;
         let room = localStorage.getItem("room")
         if (room) {
             socket.emit("joinRoom", { room: room });
         }
     }, [socket])
+
+    console.log("Mensajes AAAAAA:", mensajes);
 
     return (
         <>
@@ -63,6 +72,13 @@ export default function Tablero() {
                     <Title texto={"¿Quién es quién?"} />
                 </header>
 
+            </div>
+            <div className={styles.chatBox}>
+                {mensajes.map((m, i) => (
+                    <div key={i} className={styles.mensaje}>
+                        {m.message.message || m.message}
+                    </div>
+                ))}
             </div>
             <div className={styles.juego}>
                 {personajes.map((p) => (
@@ -73,7 +89,6 @@ export default function Tablero() {
                         onClick={() => handleClick(p.id)}
                     />
                 ))}
-
             </div>
             <div className={styles.botonesRespuestas}>
                 <Input placeholder={"Hace una pregunta"} color={"registro"} onChange={(e) => setMessage(e.target.value)}></Input>
