@@ -103,21 +103,16 @@ app.post('/login', async function (req, res) {
     try {
         const resultado = await realizarQuery(`
             SELECT * FROM Usuarios 
-            WHERE usuario_mail = '${req.body.usuario_mail}' AND password = '${req.body.contraseña}'
+            WHERE mail = '${req.body.mail}' AND contraseña = '${req.body.contraseña}'
         `);
-
-        if (resultado.length > 0) {
-            const usuario = resultado[0];
-            res.send({
-                ok: true,
-                mensaje: "Login correcto",
-                id: usuario.ID,
-            });
+        if (resultado.length != 0) {
+            if (resultado[0].es_admin === 0) {
+                res.send({ok: true, admin: false, id: resultado[0].ID})
+            } else {
+                res.send({ok: true, admin: true, id: resultado[0].ID})
+            }
         } else {
-            res.send({
-                ok: false,
-                mensaje: "Credenciales incorrectas"
-            });
+            res.send({message: "Error, no se encontró ningun usuario"})
         }
 
     } catch (error) {

@@ -10,7 +10,7 @@ import styles from "./page.module.css"
 export default function LoginPage() {
   const [nombre, setNombre] = useState("")
   const [contraseña, setContraseña] = useState("")
-  const [usuarioMail, setUsuarioMail] = useState("")
+  const [mail, setMail] = useState("")
 
   const router = useRouter()
 
@@ -39,7 +39,7 @@ export default function LoginPage() {
 
   /*Login*/
   function obtenerDatos() {
-    let datos = { contraseña, usuario_mail: usuarioMail }
+    let datos = { contraseña, mail }
     login(datos)
   }
 
@@ -54,17 +54,17 @@ export default function LoginPage() {
       });
 
       console.log(response);
-
       const result = await response.json();
-
       if (result.ok) {
         localStorage.setItem('ID', result.id);
-        if (result.ok === true) {
-          router.replace("/iniciochat")
+        if (result.admin === true) {
+          router.replace('/administrador')
+        } else {
+          router.replace('/inicio')
         }
 
       } else {
-        alert(result.mensaje)
+        alert(result.message)
       }
     } catch (error) {
       console.error("Error", error);
@@ -76,7 +76,7 @@ export default function LoginPage() {
       <div className={styles.section}>
         <div className={styles.container}>
           <Title texto="Inicia Sesión" color={"registro"} /><h3></h3><br />
-          <Input color={"registro"} type={"text"} placeholder={"Ingrese su mail"} id={"usuario_mail"} onChange={(event) => setUsuarioMail(event.target.value)}></Input>
+          <Input color={"registro"} type={"text"} placeholder={"Ingrese su usuario de mail"} id={"mail"} onChange={(event) => setMail(event.target.value)}></Input>
           <br /><br />
           <Input color={"registro"} type={"password"} placeholder={"Ingrese su contraseña"} id={"contraseña"} onChange={(event) => setContraseña(event.target.value)}></Input>
           <br /><br />
