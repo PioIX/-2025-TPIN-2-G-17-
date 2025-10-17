@@ -20,9 +20,3 @@ export default function Boton(props) {
         }>{props.texto}</button>
     );
 }
-
-
-
-
-
-

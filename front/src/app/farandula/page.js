@@ -8,6 +8,7 @@ import { useSocket } from "@/hooks/useSocket";
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation"
 import styles from "./page.module.css"
+import Mensajes from "@/componentes/Mensajes";
 
 export default function Tablero() {
     const router = useRouter()
@@ -73,11 +74,23 @@ export default function Tablero() {
                 </header>
 
             </div>
+            {/*
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (
                     <div key={i} className={styles.mensaje}>
                         {m.message.message || m.message}
                     </div>
+                ))}
+            </div>
+            */}
+            <div className={styles.chatBox}>
+                {mensajes.map((m, i) => (
+                    <Mensajes
+                        key={i}
+                        texto={m.message.message || m.message}
+                        color={"mensaje"} 
+                    >
+                    </Mensajes>
                 ))}
             </div>
             <div className={styles.juego}>
