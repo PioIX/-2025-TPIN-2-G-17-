@@ -37,6 +37,8 @@ export default function Tablero() {
     ];
     const [mensajes, setMensajes] = useState([]);
     const [message, setMessage] = useState("");
+    const [bool, setBool] = useState("");
+    const [color, setcolor] = useState("mensaje");
 
     useEffect(() => {
         if (!socket) return;
@@ -64,7 +66,14 @@ export default function Tablero() {
         }
     }, [socket])
 
-    console.log("Mensajes AAAAAA:", mensajes);
+    function checkeado(event) {
+        setBool(event.target.value)
+        if (bool == "si") {
+            setcolor("si")
+        } else {
+            setcolor("no")
+        } 
+    }
 
     return (
         <>
@@ -88,7 +97,7 @@ export default function Tablero() {
                     <Mensajes
                         key={i}
                         texto={m.message.message || m.message}
-                        color={"mensaje"} 
+                        color={color} 
                     >
                     </Mensajes>
                 ))}
@@ -108,8 +117,8 @@ export default function Tablero() {
                 <Boton color={"wpp"} texto={"Preguntar"} onClick={sendMessage}></Boton>
             </div>
             <div className={styles.botonesRespuestas}>
-                <Boton color={"si"} texto={"Sí"} />
-                <Boton color={"no"} texto={"No"} />
+                <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado}/>
+                <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado}/>
             </div>
             <div className={styles.footer}>
                 <footer>

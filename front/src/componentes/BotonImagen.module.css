@@ -1,6 +1,6 @@
 .botonImagen {
   background-color: #fffaf2;
-  border: 2px solid #e69af5;
+  border: 2px solid #25396b;
   border-radius: 12px;
   padding: 10px;
   display: flex;
@@ -15,7 +15,7 @@
 
 .botonImagen:hover {
   transform: scale(1.05);
-  background-color: #f4dcf9;
+  background-color: #8d9fce;
 }
 
 .imagenPersonaje {
@@ -37,7 +37,7 @@
 .seleccionado {
   opacity: 0.5;
   transform: scale(0.95);
-  border-color: #b64ad8;
+  border-color: #512188;
 }
 
 .deshabilitado {
