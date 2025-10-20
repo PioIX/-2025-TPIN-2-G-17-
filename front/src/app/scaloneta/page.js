@@ -11,6 +11,12 @@ import styles from "./page.module.css"
 
 export default function Tablero() {
     const router = useRouter()
+    const partida = JSON.parse(localStorage.getItem("partidaActual"));
+    const jugadorId = parseInt(localStorage.getItem("ID"));
+
+    const [nombreArriesgado, setNombreArriesgado] = useState("");
+    const [mensaje, setMensaje] = useState("");
+    
     const personajes = [
         { id: 1, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
         { id: 2, imagen: "/Bomba Tucumana.png", texto: "Bomba Tucumana" },
@@ -34,6 +40,35 @@ export default function Tablero() {
         { id: 20, imagen: "/Guida Kaczka.png", texto: "Guido Kaczka" },
     ];
 
+    async function arriesgar() {
+        if (!nombreArriesgado.trim()) {
+            alert("Ingresá un nombre antes de arriesgar");
+            return;
+        }
+
+        try {
+            const res = await fetch("http://localhost:4000/arriesgar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id_partida: partida.ID,
+                    id_jugador: jugadorId,
+                    nombre_arriesgado: nombreArriesgado
+                }),
+            });
+
+            const result = await res.json();
+            setMensaje(result.msg);
+
+            if (result.ok) {
+                router.push("/fin-partida"); // o donde quieras mostrar el resultado
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error al conectar con el servidor");
+        }
+    }
+
 
     return (
         <>
@@ -53,6 +88,8 @@ export default function Tablero() {
                     />
                 ))}
             </div>
+            <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro"  onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
+            <Boton onClick={arriesgar} color="arriesgar">Arriesgar</Boton>
             <div className={styles.footer}>
                 <footer>
                     <h2>Arrufat - Gaetani - Suarez - Zuran</h2>

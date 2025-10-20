@@ -27,6 +27,24 @@ CREATE TABLE Usuarios(
     PRIMARY KEY (id)
 );
 
+CREATE TABLE Partidas (
+    ID INT NOT NULL AUTO_INCREMENT,
+    jugador1_id INT,
+    jugador2_id INT,
+    personaje_jugador1_id INT,
+    personaje_jugador2_id INT,
+    ganador_id INT,
+    arriesgo_jugador1 BOOL DEFAULT 0,
+    arriesgo_jugador2 BOOL DEFAULT 0,
+    estado VARCHAR(50) DEFAULT 'en_curso',
+    PRIMARY KEY (ID),
+    FOREIGN KEY (jugador1_id) REFERENCES Usuarios(ID),
+    FOREIGN KEY (jugador2_id) REFERENCES Usuarios(ID),
+    FOREIGN KEY (personaje_jugador1_id) REFERENCES Personajes(ID),
+    FOREIGN KEY (personaje_jugador2_id) REFERENCES Personajes(ID),
+    FOREIGN KEY (ganador_id) REFERENCES Usuarios(ID)
+);
+
 /*farándula*/
 INSERT INTO Personajes (nombre, foto, categoria_id) VALUES
 ('Angel De Brito', 'Angel De Brito.png', 1),
