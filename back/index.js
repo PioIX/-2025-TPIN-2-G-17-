@@ -56,13 +56,13 @@ io.on("connection", (socket) => {
     const req = socket.request;
 
     socket.on('joinRoom', data => {
-        console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
+        console.log("🚀 ~ io.on ~ req.session.room:", data.room)
         if (req.session.room != undefined && req.session.room.length > 0)
             socket.leave(req.session.room);
         req.session.room = data.room;
-        socket.join(req.session.room);
+        socket.join(data.room);
 
-        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
+        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: data.room });
     });
 
     socket.on('pingAll', data => {
@@ -74,6 +74,7 @@ io.on("connection", (socket) => {
             io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
         });*/
     socket.on('sendMessage', ({ room, message }) => {
+        console.log("📤 Mensaje recibido en back:", { room, message });
         io.to(room).emit('newMessage', { room, message });
     });
 
@@ -321,36 +322,6 @@ app.post('/eliminarContacto', async function (req, res) {
             error: error.message
         });
     }
-});
-
-
-/* ACA ARRANCA LO DEL SOCKET */
-io.on("connection", (socket) => {
-    const req = socket.request;
-
-    socket.on('joinRoom', data => {
-        console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
-        if (req.session.room != undefined && req.session.room.length > 0)
-            socket.leave(req.session.room);
-        req.session.room = data.room;
-        socket.join(req.session.room);
-
-        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
-    });
-
-    socket.on('pingAll', data => {
-        console.log("PING ALL: ", data);
-        io.emit('pingAll', { event: "Ping to all", message: data });
-    });
-
-    socket.on('sendMessage', data => {
-        console.log("📤 Mensaje recibido en back:", data);
-        io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data, /*usuario: req.session.user*/ usuario: data.usuario });
-    });
-
-    socket.on('disconnect', () => {
-        console.log("Disconnect");
-    })
 });
 
 //subir mensajes a bbdd

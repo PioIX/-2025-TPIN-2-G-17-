@@ -53,10 +53,18 @@ export default function Tablero() {
         };
     }, [socket]);
 
-
+    {/*
     function sendMessage() {
         socket.emit("sendMessage", { message });
         console.log({ message })
+    }*/}
+
+    function sendMessage() {
+        const room = localStorage.getItem("room");
+        const nuevo = { message, color: "mensaje" };
+        socket.emit("sendMessage", { room, message });
+        console.log("Mensaje enviado:", nuevo);
+       // setMensajes((prev) => [...prev, nuevo]);
     }
     useEffect(() => {
         if (!socket) return;
@@ -66,15 +74,35 @@ export default function Tablero() {
         }
     }, [socket])
 
+
+    {/* 
     function checkeado(event) {
         setBool(event.target.value)
-        if (bool == "si") {
+        if (event.target.value == "si") {
             setcolor("si")
         } else {
             setcolor("no")
-        } 
+        }
     }
+    */}
 
+    function checkeado(event) {
+        const value = event.target.value;
+        setBool(value);
+
+        setMensajes((prevMensajes) => {
+            if (prevMensajes.length === 0) return prevMensajes; // por si no hay mensajes
+
+            // Clonamos el array
+            const nuevos = [...prevMensajes];
+            // Modificamos el último mensaje
+            const ultimo = { ...nuevos[nuevos.length - 1] };
+            ultimo.color = value === "si" ? "si" : "no";
+            nuevos[nuevos.length - 1] = ultimo;
+
+            return nuevos;
+        });
+    }
     return (
         <>
             <div className={styles.header}>
@@ -86,9 +114,12 @@ export default function Tablero() {
             {/*
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (
-                    <div key={i} className={styles.mensaje}>
-                        {m.message.message || m.message}
-                    </div>
+                    <Mensajes
+                        key={i}
+                        texto={m.message.message || m.message}
+                        color={color}
+                    >
+                    </Mensajes>
                 ))}
             </div>
             */}
@@ -96,10 +127,9 @@ export default function Tablero() {
                 {mensajes.map((m, i) => (
                     <Mensajes
                         key={i}
-                        texto={m.message.message || m.message}
-                        color={color} 
-                    >
-                    </Mensajes>
+                        texto={m.message?.message || m.message}
+                        color={m.color || "mensaje"}
+                    />
                 ))}
             </div>
             <div className={styles.juego}>
@@ -117,8 +147,8 @@ export default function Tablero() {
                 <Boton color={"wpp"} texto={"Preguntar"} onClick={sendMessage}></Boton>
             </div>
             <div className={styles.botonesRespuestas}>
-                <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado}/>
-                <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado}/>
+                <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado} />
+                <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado} />
             </div>
             <div className={styles.footer}>
                 <footer>
