@@ -11,7 +11,6 @@ import { useSocket } from "@/hooks/useSocket";
 export default function LoginPage() {
     const router = useRouter()
     const { socket } = useSocket();
-    const [loading, setLoading] = useState(false);
 
     const irFamosos = () => {
         router.push("/famosos");
@@ -44,8 +43,6 @@ export default function LoginPage() {
         }
 
         try {
-            setLoading(true);
-
             const res = await fetch("http://localhost:4000/crearPartida", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -63,8 +60,6 @@ export default function LoginPage() {
         } catch (err) {
             console.error(err);
             alert("Error de conexión con el servidor");
-        } finally {
-            setLoading(false);
         }
     }
 
