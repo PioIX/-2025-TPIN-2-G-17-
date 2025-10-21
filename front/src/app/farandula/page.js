@@ -62,10 +62,11 @@ export default function Tablero() {
     function sendMessage() {
         const room = localStorage.getItem("room");
         const nuevo = { message, color: "mensaje" };
+        // const data = { message, color}
         socket.emit("sendMessage", { room, message });
         console.log("Mensaje enviado:", nuevo);
-       // setMensajes((prev) => [...prev, nuevo]);
     }
+
     useEffect(() => {
         if (!socket) return;
         let room = localStorage.getItem("room")
@@ -90,19 +91,39 @@ export default function Tablero() {
         const value = event.target.value;
         setBool(value);
 
+        const nuevoColor = value == "si" ? "si" : "no";
+        setcolor(nuevoColor);
+
         setMensajes((prevMensajes) => {
-            if (prevMensajes.length === 0) return prevMensajes; // por si no hay mensajes
-
-            // Clonamos el array
+            if (prevMensajes.length == 0) return prevMensajes;
             const nuevos = [...prevMensajes];
-            // Modificamos el último mensaje
             const ultimo = { ...nuevos[nuevos.length - 1] };
-            ultimo.color = value === "si" ? "si" : "no";
+            ultimo.color = nuevoColor;
             nuevos[nuevos.length - 1] = ultimo;
-
             return nuevos;
         });
+
+        const room = localStorage.getItem("room");
+        socket.emit("colorChange", { room, color: nuevoColor });
     }
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on("updateColor", ({ color }) => {
+            console.log("Nuevo color recibido del otro jugador:", color);
+            setMensajes((prevMensajes) => {
+                if (prevMensajes.length === 0) return prevMensajes;
+                const nuevos = [...prevMensajes];
+                const ultimo = { ...nuevos[nuevos.length - 1] };
+                ultimo.color = color;
+                nuevos[nuevos.length - 1] = ultimo;
+                return nuevos;
+            });
+        });
+        return () => socket.off("updateColor");
+    }, [socket]);
+
+
     return (
         <>
             <div className={styles.header}>
