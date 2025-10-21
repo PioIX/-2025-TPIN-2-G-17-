@@ -13,6 +13,7 @@ import Mensajes from "@/componentes/Mensajes";
 export default function Tablero() {
     const router = useRouter()
     const { socket, isConnected } = useSocket();
+    
     const personajes = [
         { id: 1, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
         { id: 2, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
@@ -53,12 +54,6 @@ export default function Tablero() {
         };
     }, [socket]);
 
-    {/*
-    function sendMessage() {
-        socket.emit("sendMessage", { message });
-        console.log({ message })
-    }*/}
-
     function sendMessage() {
         const room = localStorage.getItem("room");
         const nuevo = { message, color: "mensaje" };
@@ -74,18 +69,6 @@ export default function Tablero() {
             socket.emit("joinRoom", { room: room });
         }
     }, [socket])
-
-
-    {/* 
-    function checkeado(event) {
-        setBool(event.target.value)
-        if (event.target.value == "si") {
-            setcolor("si")
-        } else {
-            setcolor("no")
-        }
-    }
-    */}
 
     function checkeado(event) {
         const value = event.target.value;

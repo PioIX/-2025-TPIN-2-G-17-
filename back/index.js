@@ -201,6 +201,32 @@ app.post("/traerUsuarios", async function (req, res) {
     }
 });
 
+//JUEGO
+app.get('/imagenes', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes ORDER BY RAND() LIMIT 1;");
+        if (personajes.length === 0) {
+            return res.send({ ok: false, mensaje: "No hay personajes" });
+        }
+        const personaje = personaje[0];
+        res.send({
+            ok: true,
+            frase: {
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
 
 
 //agregar chats
