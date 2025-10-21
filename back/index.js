@@ -108,7 +108,7 @@ app.post('/login', async function (req, res) {
     try {
         const resultado = await realizarQuery(`
             SELECT * FROM Usuarios 
-            WHERE mail = '${req.body.mail}' AND contraseña = '${req.body.contraseña}'
+            WHERE nombre = '${req.body.nombre}' AND contraseña = '${req.body.contraseña}'
         `);
         if (resultado.length != 0) {
             if (resultado[0].es_admin === 0) {
@@ -133,19 +133,17 @@ app.post('/login', async function (req, res) {
 app.post('/registro', async function (req, res) {
     try {
         console.log(req.body)
-        vector = await realizarQuery(`SELECT * FROM Usuarios WHERE usuario_mail='${req.body.usuario_mail}'`)
+        vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre='${req.body.nombre}'`)
 
         if (vector.length == 0) {
             realizarQuery(`
-                INSERT INTO Usuarios (usuario_mail, password, nombre, foto_perfil) VALUES
-                    ('${req.body.usuario_mail}','${req.body.password}','${req.body.nombre}','');
+                INSERT INTO Usuarios (nombre, contraseña, mail, puntaje) VALUES
+                    ('${req.body.nombre}','${req.body.contraseña}','${req.body.mail}',0);
             `)
-
+            res.send({ res: "ok", agregado: true })
         } else {
             res.send({ res: "Ya existe ese dato", agregado: false })
         }
-
-
     } catch (e) {
         res.status(500).send({
             agregado: false,
