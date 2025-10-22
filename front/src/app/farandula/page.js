@@ -13,33 +13,31 @@ import Mensajes from "@/componentes/Mensajes";
 export default function Tablero() {
     const router = useRouter()
     const { socket, isConnected } = useSocket();
-    
-    const personajes = [
-        { id: 1, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 2, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 3, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 4, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 5, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 6, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 7, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 8, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 9, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 10, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 11, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 12, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 13, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 14, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 15, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 16, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 17, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 18, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 19, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 20, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-    ];
     const [mensajes, setMensajes] = useState([]);
     const [message, setMessage] = useState("");
     const [bool, setBool] = useState("");
     const [color, setcolor] = useState("mensaje");
+    const [personajes, setPersonajes] = useState([]);
+
+    async function traerPersonajes() {
+        try {
+            const response = await fetch("http://localhost:4000/farandula", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+            const data = await response.json();
+            console.log("Data recibida del backend:", data);
+            setPersonajes(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Error al traer personajes:", error);
+            setPersonajes([]);
+        }
+    }
+
+    useEffect(() => {
+        traerPersonajes();
+        console.log("LOS PERSONJES SON: ", personajes)
+    }, []);
 
     useEffect(() => {
         if (!socket) return;
@@ -106,7 +104,6 @@ export default function Tablero() {
         return () => socket.off("updateColor");
     }, [socket]);
 
-
     return (
         <>
             <div className={styles.header}>
@@ -115,18 +112,6 @@ export default function Tablero() {
                 </header>
 
             </div>
-            {/*
-            <div className={styles.chatBox}>
-                {mensajes.map((m, i) => (
-                    <Mensajes
-                        key={i}
-                        texto={m.message.message || m.message}
-                        color={color}
-                    >
-                    </Mensajes>
-                ))}
-            </div>
-            */}
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (
                     <Mensajes
@@ -140,8 +125,8 @@ export default function Tablero() {
                 {personajes.map((p) => (
                     <BotonImagen
                         key={p.id}
-                        imagen={p.imagen}
-                        texto={p.texto}
+                        imagen={`/${p.foto}`}
+                        texto={p.nombre}
                         onClick={() => handleClick(p.id)}
                     />
                 ))}

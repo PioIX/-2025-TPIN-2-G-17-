@@ -137,8 +137,8 @@ app.post('/registro', async function (req, res) {
 
         if (vector.length == 0) {
             realizarQuery(`
-                INSERT INTO Usuarios (nombre, contraseña, mail, puntaje) VALUES
-                    ('${req.body.nombre}','${req.body.contraseña}','${req.body.mail}',0);
+                INSERT INTO Usuarios (nombre, contraseña, mail, puntaje, es_admin) VALUES
+                    ('${req.body.nombre}','${req.body.contraseña}','${req.body.mail}',0, 0);
             `)
             res.send({ res: "ok", agregado: true })
         } else {
@@ -202,32 +202,32 @@ app.post("/traerUsuarios", async function (req, res) {
 });
 
 //JUEGO
-app.get('/imagenes', async (req, res) => {
+app.get('/farandula', async (req, res) => {
     try {
-        const personajes = await realizarQuery("SELECT * FROM Personajes ORDER BY RAND() LIMIT 1;");
-        if (personajes.length === 0) {
-            return res.send({ ok: false, mensaje: "No hay personajes" });
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 1");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
         }
-        const personaje = personaje[0];
-        res.send({
+        res.json({
             ok: true,
-            frase: {
+            personajes: personajes.map(personaje => ({
                 id: personaje.ID,
                 nombre: personaje.nombre,
                 foto: personaje.foto,
                 categoria_id: personaje.categoria_id
-            }
+            }))
         });
 
     } catch (error) {
-        res.status(500).send({
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
             ok: false,
             mensaje: "Error en el servidor",
             error: error.message
         });
     }
 });
-
 
 //agregar chats
 
