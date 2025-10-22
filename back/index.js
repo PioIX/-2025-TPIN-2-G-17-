@@ -584,3 +584,32 @@ app.put('/modificarFrase', async function (req, res) {
         res.send({ ok: false, mensaje: "Error en la modificación", error: e.message });
     }
 });
+
+const turnos = {};  // Guardar el turno de cada sala
+
+io.on("connection", (socket) => {
+    socket.on("joinRoom", (data) => {
+        const room = data.room;
+        socket.join(room);
+        
+        if (!turnos[room]) {
+            turnos[room] = 'yo'; // El primer jugador tiene el turno
+        }
+
+        socket.emit("cambioTurno", turnos[room]);
+    });
+
+    socket.on("sendMessage", ({ room, message }) => {
+        io.to(room).emit('newMessage', { room, message });
+
+        const siguienteTurno = turnos[room] === 'yo' ? 'oponente' : 'yo';
+        turnos[room] = siguienteTurno;
+        io.to(room).emit("cambioTurno", siguienteTurno);  // Emitir el cambio de turno
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Usuario desconectado");
+    });
+});
+
+
