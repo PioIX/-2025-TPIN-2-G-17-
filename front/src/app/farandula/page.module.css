@@ -49,6 +49,7 @@
   justify-content: center;
   align-items: center;
 }
+
 /*corregir*/
 .chatBox {
   width: 100%;
@@ -58,11 +59,12 @@
   border-radius: 10px;
   padding: 15px;
   height: 150px;
-  overflow-y: auto; 
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 /*
 .mensaje {
   background-color: white;
@@ -71,5 +73,12 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 */
+
+
+.descartada {
+  filter: grayscale(100%) contrast(50%);
+  opacity: 1;
+
+}
 
 

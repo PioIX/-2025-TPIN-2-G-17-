@@ -10,10 +10,14 @@ import { useRouter } from "next/navigation"
 import styles from "./page.module.css"
 import Mensajes from "@/componentes/Mensajes";
 
+
 export default function Tablero() {
     const router = useRouter()
     const { socket, isConnected } = useSocket();
+    const [descartadas, setDescartadas] = useState([]); 
     
+
+
     const personajes = [
         { id: 1, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
         { id: 2, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
@@ -40,6 +44,7 @@ export default function Tablero() {
     const [message, setMessage] = useState("");
     const [bool, setBool] = useState("");
     const [color, setcolor] = useState("mensaje");
+
 
     useEffect(() => {
         if (!socket) return;
@@ -106,6 +111,14 @@ export default function Tablero() {
         return () => socket.off("updateColor");
     }, [socket]);
 
+    function handleClick(id) {
+        setDescartadas((prev) => {
+            const updated = prev.includes(id) ? prev : [...prev, id];  // Evitar duplicados
+            console.log("IDs descartados:", updated);  // Verifica que se actualice correctamente
+            return updated;
+        });
+    }
+
 
     return (
         <>
@@ -143,9 +156,13 @@ export default function Tablero() {
                         imagen={p.imagen}
                         texto={p.texto}
                         onClick={() => handleClick(p.id)}
+                        className={descartadas.includes(p.id) ? styles.descartada : ""} 
                     />
+
                 ))}
             </div>
+
+
             <div className={styles.botonesRespuestas}>
                 <Input placeholder={"Hace una pregunta"} color={"registro"} onChange={(e) => setMessage(e.target.value)}></Input>
                 <Boton color={"wpp"} texto={"Preguntar"} onClick={sendMessage}></Boton>
@@ -160,6 +177,8 @@ export default function Tablero() {
                 </footer>
 
             </div>
+
+
         </>
     )
 }
