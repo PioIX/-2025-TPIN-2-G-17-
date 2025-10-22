@@ -1,11 +1,10 @@
-"use client"
+"use client";
 
-import Boton from "@/componentes/Boton"
-import Input from "@/componentes/Input"
-import Title from "@/componentes/Title"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import styles from "./page.module.css"
+import Boton from "@/componentes/Boton";
+import Title from "@/componentes/Title";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import styles from "./page.module.css";
 import { useSocket } from "@/hooks/useSocket";
 
 export default function LoginPage() {
@@ -14,19 +13,26 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [mensaje, setMensaje] = useState("");
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
+    const [jugadorId, setJugadorId] = useState(null);
 
-    const jugadorId = localStorage.getItem('ID'); // Obtener ID del jugador desde localStorage
-
-    // Función para manejar la selección de categoría
-    const manejarSeleccionCategoria = async (categoriaId) => {
-        setCategoriaSeleccionada(categoriaId); // Guarda la categoría seleccionada
-        setLoading(true);
-        setMensaje(""); // Limpia mensaje anterior
-
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const id = localStorage.getItem("ID");
+            if (id) {
+                setJugadorId(id);
+            }
+        }
+    }, []);
+ 
+    async function manejarSeleccionCategoria(categoriaId) {
         if (!jugadorId) {
             alert("No se encontró el ID del jugador. Por favor, inicia sesión.");
             return;
         }
+
+        setCategoriaSeleccionada(categoriaId); 
+        setLoading(true);
+        setMensaje(""); 
 
         try {
             const res = await fetch("http://localhost:4000/crearPartida", {
@@ -41,14 +47,13 @@ export default function LoginPage() {
             });
 
             const result = await res.json();
-
-            setMensaje(result.msg); // Actualiza el mensaje recibido del backend
+            setMensaje(result.msg); 
 
             if (result.ok) {
                 if (result.esperando) {
                     setMensaje("Esperando oponente...");
                 } else {
-                    router.push(`/${result.nombreCategoria}`);
+                    router.push(`/${result.nombreCategoria}`); 
                 }
             } else {
                 setMensaje("Hubo un problema al crear la partida.");
@@ -59,32 +64,62 @@ export default function LoginPage() {
         }
 
         setLoading(false); // Termina el estado de carga
-    };
+    }
 
-    // Funciones para cada categoría (manteniendo el router.push y la creación de partida)
+
+    useEffect(() => {
+        if (socket) {
+            socket.on("partidaCreada", async (data) => {
+                try {
+                    const res = await fetch('http://localhost:4000/otraOperación', {
+                        method: 'POST',
+                        body: JSON.stringify({ id: data.jugador1_id }),
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const result = await res.json();
+
+                    if (result.ok) {
+                        setMensaje("La partida ha comenzado!");
+                        router.push(`/${data.nombreCategoria}`);
+                    }
+                } catch (error) {
+                    console.error("Error en la operación asincrónica:", error);
+                }
+            });
+
+            return () => {
+                socket.off("partidaCreada");
+            };
+        }
+    }, [socket, router]);
+
+    // Funciones para cada categoría
     const irFamosos = () => {
-        manejarSeleccionCategoria(2); // Asumiendo que 1 es el ID de la categoría "Famosos"
+        manejarSeleccionCategoria(2);
         socket.emit("joinRoom", { room: "famosos" });
     };
 
     const irScaloneta = () => {
-        manejarSeleccionCategoria(5); // ID para la categoría "Scaloneta"
+        manejarSeleccionCategoria(5);
         socket.emit("joinRoom", { room: "scaloneta" });
     };
 
     const irProfesores = () => {
-        manejarSeleccionCategoria(3); // ID para la categoría "Profesores"
+        manejarSeleccionCategoria(3);
         socket.emit("joinRoom", { room: "profesores" });
     };
 
     const irFarandula = () => {
-        manejarSeleccionCategoria(1); // ID para la categoría "Farandula"
+        manejarSeleccionCategoria(1);
         localStorage.setItem("room", "farandula");
         socket.emit("joinRoom", { room: "farandula" });
     };
 
     const irCantantes = () => {
-        manejarSeleccionCategoria(4); // ID para la categoría "Cantantes"
+        manejarSeleccionCategoria(4);
         socket.emit("joinRoom", { room: "cantantes" });
     };
 
@@ -103,9 +138,9 @@ export default function LoginPage() {
                 <Boton texto={"Cantantes"} color={"cantantes"} onClick={irCantantes} />
             </div>
 
-            {loading && <p>Esperando a que se cree la partida...</p>} {/* Estado de carga */}
-            {mensaje && <p>{mensaje}</p>} {/* Mensaje de respuesta */}
-            
+            {loading && <p>Esperando a que se cree la partida...</p>}
+            {mensaje && <p>{mensaje}</p>}
+
             <div className={styles.footer}>
                 <footer>
                     <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
