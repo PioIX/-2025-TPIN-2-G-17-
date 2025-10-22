@@ -107,12 +107,12 @@ app.post('/login', async function (req, res) {
         `);
         if (resultado.length != 0) {
             if (resultado[0].es_admin === 0) {
-                res.send({ok: true, admin: false, id: resultado[0].ID})
+                res.send({ ok: true, admin: false, id: resultado[0].ID })
             } else {
-                res.send({ok: true, admin: true, id: resultado[0].ID})
+                res.send({ ok: true, admin: true, id: resultado[0].ID })
             }
         } else {
-            res.send({message: "Error, no se encontró ningun usuario"})
+            res.send({ message: "Error, no se encontró ningun usuario" })
         }
 
     } catch (error) {
@@ -477,76 +477,102 @@ app.post("/crearPartida", async (req, res) => {
   const { categoria_id, jugador1_id } = req.body;
 
   try {
-    // 1️⃣ Buscar oponente aleatorio
-    const oponentes = await realizarQuery(`SELECT ID FROM Usuarios WHERE ID != ${jugador1_id}`);
-    if (oponentes.length === 0) {
-      return res.send({ ok: false, msg: "No hay oponentes disponibles" });
-    }
-    const oponente = oponentes[Math.floor(Math.random() * oponentes.length)];
-
-    // 2️⃣ Elegir personajes aleatorios de esa categoría
-    const personajes = await realizarQuery(`SELECT ID FROM Personajes WHERE categoria_id = ${categoria_id}`);
-    if (personajes.length < 2) {
-      return res.send({ ok: false, msg: "No hay suficientes personajes en esa categoría" });
-    }
-
-    const personajeJugador1 = personajes[Math.floor(Math.random() * personajes.length)];
-    let personajeJugador2 = personajeJugador1;
-    // asegurarse que no sea el mismo personaje
-    while (personajeJugador2.ID === personajeJugador1.ID) {
-      personajeJugador2 = personajes[Math.floor(Math.random() * personajes.length)];
-    }
-
-    // 3️⃣ Crear la partida
-    await realizarQuery(`
-      INSERT INTO Partidas (jugador1_id, jugador2_id, personaje_jugador1_id, personaje_jugador2_id, estado)
-      VALUES (${jugador1_id}, ${oponente.ID}, ${personajeJugador1.ID}, ${personajeJugador2.ID}, 'en_curso');
+    // 1. Verificar si ya hay otro jugador esperando en la misma categoría
+    const oponente = await realizarQuery(`
+      SELECT * FROM Usuarios
+      WHERE esperando_categoria = ${categoria_id} AND ID != ${jugador1_id}
+      LIMIT 1
     `);
 
-    const [partida] = await realizarQuery(`SELECT * FROM Partidas ORDER BY ID DESC LIMIT 1`);
+    // 2. Obtener el nombre de la categoría
+    const categoria = await realizarQuery(`
+      SELECT nombre FROM Categorias WHERE ID = ${categoria_id}
+    `);
 
-    res.send({ ok: true, partida });
+    if (categoria.length === 0) {
+      return res.status(404).send({ ok: false, msg: "Categoría no encontrada" });
+    }
+
+    const nombreCategoria = categoria[0].nombre; // El nombre de la categoría
+
+    if (oponente.length > 0) {
+      // Si encontramos un oponente, crear la partida
+      const jugador2_id = oponente[0].ID;
+
+      // Elegir personajes para los jugadores
+      const personajesJugador1 = await realizarQuery(`
+        SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+      `);
+      const personajesJugador2 = await realizarQuery(`
+        SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+      `);
+
+      const personajeJugador1_id = personajesJugador1[0].ID;
+      const personajeJugador2_id = personajesJugador2[0].ID;
+
+      // Crear partida
+      await realizarQuery(`
+        INSERT INTO Partidas (jugador1_id, jugador2_id, personaje_jugador1_id, personaje_jugador2_id, estado)
+        VALUES (${jugador1_id}, ${jugador2_id}, ${personajeJugador1_id}, ${personajeJugador2_id}, 'en espera')
+      `);
+
+      // Eliminar a ambos jugadores de la espera
+      await realizarQuery(`
+        UPDATE Usuarios SET esperando_categoria = NULL WHERE ID IN (${jugador1_id}, ${jugador2_id})
+      `);
+
+      res.send({ ok: true, msg: "Partida creada con éxito", nombreCategoria });
+    } else {
+      // Si no hay oponente, dejar al jugador esperando
+      await realizarQuery(`
+        UPDATE Usuarios SET esperando_categoria = ${categoria_id} WHERE ID = ${jugador1_id}
+      `);
+
+      res.send({ ok: true, msg: "Esperando oponente...", esperando: true, nombreCategoria });
+    }
   } catch (err) {
     console.error(err);
-    res.status(500).send({ ok: false, msg: "Error al crear la partida" });
+    res.status(500).send({ ok: false, msg: "Error al crear partida" });
   }
 });
+
+
 
 //arriesgar personaje
 
 app.post("/arriesgar", async (req, res) => {
-  const { id_partida, id_jugador, nombre_arriesgado } = req.body;
+    const { id_partida, id_jugador, nombre_arriesgado } = req.body;
 
-  try {
-    const [partida] = await realizarQuery(`SELECT * FROM Partidas WHERE ID = ${id_partida}`);
-    if (!partida) return res.send({ ok: false, msg: "Partida no encontrada" });
+    try {
+        const [partida] = await realizarQuery(`SELECT * FROM Partidas WHERE ID = ${id_partida}`);
+        if (!partida) return res.send({ ok: false, msg: "Partida no encontrada" });
 
-    const esJugador1 = id_jugador === partida.jugador1_id;
-    const personajeOponenteId = esJugador1
-      ? partida.personaje_jugador2_id
-      : partida.personaje_jugador1_id;
+        const esJugador1 = id_jugador === partida.jugador1_id;
+        const personajeOponenteId = esJugador1
+            ? partida.personaje_jugador2_id
+            : partida.personaje_jugador1_id;
 
-    const [personajeOponente] = await realizarQuery(`SELECT * FROM Personajes WHERE ID = ${personajeOponenteId}`);
-    if (!personajeOponente) return res.send({ ok: false, msg: "No se encontró el personaje del oponente" });
+        const [personajeOponente] = await realizarQuery(`SELECT * FROM Personajes WHERE ID = ${personajeOponenteId}`);
+        if (!personajeOponente) return res.send({ ok: false, msg: "No se encontró el personaje del oponente" });
 
-    if (nombre_arriesgado.trim().toLowerCase() === personajeOponente.nombre.trim().toLowerCase()) {
-      await realizarQuery(`
+        if (nombre_arriesgado.trim().toLowerCase() === personajeOponente.nombre.trim().toLowerCase()) {
+            await realizarQuery(`
         UPDATE Partidas
         SET ganador_id = ${id_jugador}, estado = 'finalizada'
         WHERE ID = ${id_partida};
       `);
-      res.send({ ok: true, gano: true, msg: "🎉 ¡Adivinaste! Ganaste la partida." });
-    } else {
-      const ganador = esJugador1 ? partida.jugador2_id : partida.jugador1_id;
-      await realizarQuery(`
+            res.send({ ok: true, gano: true, msg: "🎉 ¡Adivinaste! Ganaste la partida." });
+        } else {
+            const ganador = esJugador1 ? partida.jugador2_id : partida.jugador1_id;
+            await realizarQuery(`
         UPDATE Partidas
         SET ganador_id = ${ganador}, estado = 'finalizada'
         WHERE ID = ${id_partida};
       `);
-      res.send({ ok: true, gano: false, msg: "😢 Fallaste. La partida terminó." });
+            res.send({ ok: true, gano: false, msg: "😢 Fallaste. La partida terminó." });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ ok: false, msg: "Error en el servidor" });
     }
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ ok: false, msg: "Error en el servidor" });
-  }
 });

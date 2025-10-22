@@ -39,6 +39,10 @@ export default function Tablero() {
     const [message, setMessage] = useState("");
     const [bool, setBool] = useState("");
     const [color, setcolor] = useState("mensaje");
+    const [nombreArriesgado, setNombreArriesgado] = useState("");
+    const [mensaje, setMensaje] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
 
     useEffect(() => {
         if (!socket) return;
@@ -72,8 +76,57 @@ export default function Tablero() {
             setcolor("si")
         } else {
             setcolor("no")
-        } 
+        }
     }
+
+    async function arriesgar() {
+        // Verificación de que el nombre no esté vacío
+        if (!nombreArriesgado.trim()) {
+            alert("Ingresá un nombre antes de arriesgar");
+            return;
+        }
+
+        setLoading(true);  // Inicia el estado de carga
+
+        try {
+            // Realiza la petición al backend
+            const res = await fetch("http://localhost:4000/arriesgar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id_partida: partida.ID,
+                    id_jugador: jugadorId,
+                    nombre_arriesgado: nombreArriesgado
+                }),
+            });
+
+            // Parsear la respuesta a JSON
+            const result = await res.json();
+
+            // Actualizar el mensaje en el estado
+            setMensaje(result.msg);
+
+            if (result.ok) {
+                if (result.ganador) {
+                    setMensaje(`¡Felicidades, ganaste! El personaje correcto era ${nombreArriesgado}.`);
+                } else {
+                    setMensaje(`Lo siento, perdiste. El personaje correcto era ${result.personajeCorrecto}.`);
+                }
+
+                // Si el jugador ganó o perdió, redirigir a la página de inicio
+                router.push("/inicio");
+            } else {
+                setMensaje("Hubo un problema al realizar el arriesgue.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error al conectar con el servidor");
+        }
+
+        setLoading(false);  // Termina el estado de carga
+    }
+
+
 
     return (
         <>
@@ -97,7 +150,7 @@ export default function Tablero() {
                     <Mensajes
                         key={i}
                         texto={m.message.message || m.message}
-                        color={color} 
+                        color={color}
                     >
                     </Mensajes>
                 ))}
@@ -117,9 +170,11 @@ export default function Tablero() {
                 <Boton color={"wpp"} texto={"Preguntar"} onClick={sendMessage}></Boton>
             </div>
             <div className={styles.botonesRespuestas}>
-                <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado}/>
-                <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado}/>
+                <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado} />
+                <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado} />
             </div>
+            <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
+            <Boton onClick={arriesgar} color="arriesgar">texto={"Arriesgar"}</Boton>
             <div className={styles.footer}>
                 <footer>
                     <h2>Arrufat - Gaetani - Suarez - Zuran</h2>

@@ -61,7 +61,7 @@ export default function Tablero() {
             setMensaje(result.msg);
 
             if (result.ok) {
-                router.push("/fin-partida"); // o donde quieras mostrar el resultado
+                router.push("/inicio");
             }
         } catch (error) {
             console.error(error);
@@ -89,7 +89,7 @@ export default function Tablero() {
                 ))}
             </div>
             <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro"  onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
-            <Boton onClick={arriesgar} color="arriesgar">Arriesgar</Boton>
+            <Boton onClick={arriesgar} color="arriesgar">texto={Arriesgar}</Boton>
             <div className={styles.footer}>
                 <footer>
                     <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
