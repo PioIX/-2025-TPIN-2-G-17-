@@ -86,6 +86,40 @@ io.on("connection", (socket) => {
         console.log(`🎨 Cambio de color en ${room}: ${color}`);
         socket.to(room).emit("updateColor", { color });
     });
+/*
+    socket.on("comenzarRonda", (roomId) => {
+        const jugadores = getJugadoresPorSala(roomId);  // Obtén los jugadores de esa sala
+
+        // Asegúrate de que no se repitan cartas entre los jugadores
+        let cartasDisponibles = [...personajes];  // Aquí debes pasar el array de personajes
+
+        // Asignar una carta aleatoria a cada jugador
+        jugadores.forEach(jugador => {
+            if (cartasDisponibles.length > 0) {
+                // Seleccionar una carta aleatoria
+                const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
+
+                // Guardar la carta asignada al jugador
+                cartasAsignadasPorSala[roomId] = cartasAsignadasPorSala[roomId] || {};
+                cartasAsignadasPorSala[roomId][jugador.id] = cartaAleatoria;
+
+                // Emitir la carta asignada al jugador
+                socket.to(jugador.id).emit("cartaAsignada", cartaAleatoria);
+            }
+        });
+    });
+*/
+    socket.on("comenzarRonda", (roomId) => {
+        const jugadores = getJugadoresPorSala(roomId);  // Obtén los jugadores de esa sala
+        let cartasDisponibles = [...personajes];  // Cartas disponibles
+
+        jugadores.forEach(jugador => {
+            const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
+            io.to(jugador.id).emit("cartaAsignada", cartaAleatoria);  // Emitir la carta al jugador
+            console.log("Carta asignada a", jugador.id, cartaAleatoria);
+        });
+    });
+
 
 });
 
@@ -309,6 +343,13 @@ app.get('/scaloneta', async (req, res) => {
         });
     }
 });
+
+
+
+
+
+
+
 
 //agregar chats
 
@@ -591,7 +632,7 @@ io.on("connection", (socket) => {
     socket.on("joinRoom", (data) => {
         const room = data.room;
         socket.join(room);
-        
+
         if (!turnos[room]) {
             turnos[room] = 'yo'; // El primer jugador tiene el turno
         }

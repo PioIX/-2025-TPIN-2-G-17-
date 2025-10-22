@@ -10,42 +10,16 @@ import { useRouter } from "next/navigation"
 import styles from "./page.module.css"
 import Mensajes from "@/componentes/Mensajes";
 
-
 export default function Tablero() {
     const router = useRouter()
     const { socket, isConnected } = useSocket();
-    const [descartadas, setDescartadas] = useState([]); 
-    
-
-
-    const imagenes = [
-        { id: 1, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 2, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 3, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 4, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 5, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 6, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 7, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 8, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 9, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 10, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 11, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 12, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 13, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 14, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 15, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 16, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 17, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 18, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 19, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 20, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-    ];
     const [mensajes, setMensajes] = useState([]);
     const [message, setMessage] = useState("");
     const [bool, setBool] = useState("");
     const [color, setcolor] = useState("mensaje");
     const [personajes, setPersonajes] = useState([]);
-    
+    const [descartadas, setDescartadas] = useState([]);
+
     async function traerPersonajes() {
         try {
             const response = await fetch("http://localhost:4000/farandula", {
@@ -57,22 +31,28 @@ export default function Tablero() {
 
 
             if (data.ok && data.personajes) {
-                setPersonajes(data.personajes); 
+                setPersonajes(data.personajes);
             } else {
-                setPersonajes([]);  
+                setPersonajes([]);
             }
         } catch (error) {
             console.error("Error al traer personajes:", error);
-            setPersonajes([]);  
+            setPersonajes([]);
         }
+    }
+
+    function handleClick(id) {
+        setDescartadas((prev) => {
+            const updated = prev.includes(id) ? prev : [...prev, id];
+            console.log("IDs descartados:", updated);
+            return updated;
+        });
     }
 
     useEffect(() => {
         traerPersonajes();
-        console.log("LOS PERSONJES SON: ", personajes)
     }, []);
 
-    console.log("LOS PERSONJES 2 SON: ", personajes)
     useEffect(() => {
         if (!socket) return;
 
@@ -138,14 +118,18 @@ export default function Tablero() {
         return () => socket.off("updateColor");
     }, [socket]);
 
-    function handleClick(id) {
-        setDescartadas((prev) => {
-            const updated = prev.includes(id) ? prev : [...prev, id];  
-            console.log("IDs descartados:", updated);  
-            return updated;
-        });
-    }
+    useEffect(() => {
+        if (!socket) return;
 
+        socket.on("cartaAsignada", (carta) => {
+            console.log("Tu carta asignada es:", carta);  // Verifica que la carta se reciba correctamente
+            setCartaAsignada(carta);  // Asigna la carta al jugador
+        });
+
+        return () => {
+            socket.off("cartaAsignada");  // Limpiar el evento cuando el componente se desmonte
+        };
+    }, [socket]);
 
     return (
         <>
@@ -173,11 +157,8 @@ export default function Tablero() {
                         onClick={() => handleClick(p.id)}
                         className={descartadas.includes(p.id) ? styles.descartada : ""} 
                     />
-
                 ))}
             </div>
-
-
             <div className={styles.botonesRespuestas}>
                 <Input placeholder={"Hace una pregunta"} color={"registro"} onChange={(e) => setMessage(e.target.value)}></Input>
                 <Boton color={"wpp"} texto={"Preguntar"} onClick={sendMessage}></Boton>
@@ -192,8 +173,6 @@ export default function Tablero() {
                 </footer>
 
             </div>
-
-
         </>
     )
 }
