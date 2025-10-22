@@ -18,7 +18,6 @@ export default function Tablero() {
     const [bool, setBool] = useState("");
     const [color, setcolor] = useState("mensaje");
     const [personajes, setPersonajes] = useState([]);
-
     async function traerPersonajes() {
         try {
             const response = await fetch("http://localhost:4000/farandula", {
@@ -27,18 +26,26 @@ export default function Tablero() {
             });
             const data = await response.json();
             console.log("Data recibida del backend:", data);
-            setPersonajes(Array.isArray(data) ? data : []);
+
+
+            if (data.ok && data.personajes) {
+                setPersonajes(data.personajes); 
+            } else {
+                setPersonajes([]);  
+            }
         } catch (error) {
             console.error("Error al traer personajes:", error);
-            setPersonajes([]);
+            setPersonajes([]);  
         }
     }
+
 
     useEffect(() => {
         traerPersonajes();
         console.log("LOS PERSONJES SON: ", personajes)
     }, []);
 
+    console.log("LOS PERSONJES 2 SON: ", personajes)
     useEffect(() => {
         if (!socket) return;
 
