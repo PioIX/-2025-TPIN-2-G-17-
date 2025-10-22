@@ -16,7 +16,7 @@ export default function BotonImagen(props) {
       <img
         src={props.imagen}
         alt={props.texto || "personaje"}
-        className={styles.imagenPersonaje}
+        className={clsx(styles.imagenPersonaje, props.className)} 
       />
       {props.texto}
     </button>
