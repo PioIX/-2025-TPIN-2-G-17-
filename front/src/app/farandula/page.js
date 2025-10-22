@@ -18,6 +18,7 @@ export default function Tablero() {
     const [bool, setBool] = useState("");
     const [color, setcolor] = useState("mensaje");
     const [personajes, setPersonajes] = useState([]);
+    
     async function traerPersonajes() {
         try {
             const response = await fetch("http://localhost:4000/farandula", {
@@ -38,7 +39,6 @@ export default function Tablero() {
             setPersonajes([]);  
         }
     }
-
 
     useEffect(() => {
         traerPersonajes();

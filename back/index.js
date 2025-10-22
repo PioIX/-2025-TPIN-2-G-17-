@@ -229,6 +229,87 @@ app.get('/farandula', async (req, res) => {
     }
 });
 
+app.get('/famosos', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 2");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
+        }
+        res.json({
+            ok: true,
+            personajes: personajes.map(personaje => ({
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
+app.get('/cantantes', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 3");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
+        }
+        res.json({
+            ok: true,
+            personajes: personajes.map(personaje => ({
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
+app.get('/scaloneta', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 4");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
+        }
+        res.json({
+            ok: true,
+            personajes: personajes.map(personaje => ({
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
 //agregar chats
 
 app.post("/agregarChat", async function (req, res) {
