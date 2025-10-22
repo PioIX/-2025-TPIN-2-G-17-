@@ -119,3 +119,37 @@ INSERT INTO Personajes (nombre, foto, categoria_id) VALUES
 ('Tagliafico', 'Tagliafico.png', 4),
 ('Foyth', 'Foyth.png', 4),
 ('Lo Celso', 'Lo Celso.png', 4);
+
+/*profesores*/
+INSERT INTO Personajes (nombre, foto, categoria_id) VALUES
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+('Brenda', 'Brenda', 5),
+
+
+
+
+
+INSERT INTO Categorias(id, nombre) VALUES
+('1', 'farandula'),
+('2', 'famosos'),
+('3', 'cantantes'),
+('4', 'scaloneta'),
+('5', 'profesores');
