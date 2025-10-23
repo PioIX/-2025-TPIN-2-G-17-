@@ -24,8 +24,8 @@ export default function Tablero() {
     const [carta, setCarta] = useState(null);
     const [personajes, setPersonajes] = useState([]);
     const [descartadas, setDescartadas] = useState([]);
-    const [cartaAsignada, setCartaAsignada] = useState(null);
-
+    const [cartaAsignada, setCartaAsignada] = useState([]);
+    const [cartaAsignada2, setCartaAsignada2] = useState([]);
 
     async function traerPersonajes() {
         try {
@@ -59,6 +59,7 @@ export default function Tablero() {
 
     useEffect(() => {
         traerPersonajes();
+        traerCarta();
     }, []);
 
     useEffect(() => {
@@ -87,7 +88,7 @@ export default function Tablero() {
         }
     }, [socket])
 
-  
+
 
     async function arriesgar() {
         // Verificación de que el nombre no esté vacío
@@ -136,6 +137,8 @@ export default function Tablero() {
     }
 
 
+
+    function checkeado(event) {
         const value = event.target.value;
         setBool(value);
 
@@ -155,6 +158,7 @@ export default function Tablero() {
         socket.emit("colorChange", { room, color: nuevoColor });
     }
 
+
     useEffect(() => {
         if (!socket) return;
         socket.on("updateColor", ({ color }) => {
@@ -172,6 +176,7 @@ export default function Tablero() {
     }, [socket]);
 
     // carta random
+    /*
 
     useEffect(() => {
         // Asegúrate de que socket esté disponible y la sala exista
@@ -196,6 +201,63 @@ export default function Tablero() {
             socket.off("cartaAsignada");  // Limpiar el evento cuando el componente se desmonte
         };
     }, [socket]);
+    */
+    useEffect(() => {
+        // Asegúrate de que socket esté disponible y la sala exista
+        const room = localStorage.getItem("room");
+        const carta = JSON.parse(localStorage.getItem("carta"));
+        const carta2 = JSON.parse(localStorage.getItem("carta2"));
+        if (room && socket) {
+            socket.emit("cartaRandom", room, carta, carta2);  // Emitir el evento al backend
+        }
+    }, [socket]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        // Recibe la carta del host
+        socket.on("tu carta", ({ carta }) => {
+            console.log("Tu carta (host):", carta);  // Aquí deberías ver la carta del host
+            setCartaAsignada(carta);  // Guardamos la carta del host en el estado
+        });
+
+        // Recibe la carta del oponente
+        socket.on("carta del oponente", ({ carta2 }) => {
+            console.log("Carta del oponente:", carta2);  // Aquí deberías ver la carta del oponente
+            setCartaAsignada2(carta2);  // Guardamos la carta del oponente en el estado
+        });
+
+        return () => {
+            socket.off("tu carta");
+            socket.off("carta del oponente");
+        };
+    }, [socket]);
+
+    async function traerCarta() {
+        try {
+            const response = await fetch("http://localhost:4000/random", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+            const data = await response.json();
+            console.log("Data recibida del backend:", data);
+
+            if (data.ok) {
+                //localStorage.setItem("personajesFarandula", JSON.stringify(data.personajes));
+                setCartaAsignada(data.carta);
+                setCartaAsignada2(data.carta2);
+                localStorage.setItem("carta", JSON.stringify(data.carta));
+                localStorage.setItem("carta2", JSON.stringify(data.carta2));
+            } else {
+                setCartaAsignada([]);
+                setCartaAsignada2([]);
+            }
+        } catch (error) {
+            console.error("Error al traer cartas:", error);
+            setCartaAsignada([]);
+            setCartaAsignada2([]);
+        }
+    }
 
 
     return (
@@ -212,7 +274,7 @@ export default function Tablero() {
                         key={i}
                         texto={m.message?.message || m.message}
                         color={m.color || "mensaje"}
-                    /> 
+                    />
 
                 ))}
             </div>

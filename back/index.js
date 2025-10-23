@@ -91,6 +91,22 @@ io.on("connection", (socket) => {
         socket.to(room).emit("updateColor", { color });
     });
 
+    socket.on("cartaRandom", ({ room, carta, carta2 }) => {
+        if (!carta || !carta2) {
+            console.error("Una de las cartas es undefined:", carta, carta2);
+            return;
+        }
+
+        console.log("Carta para el host:", carta);
+        console.log("Carta para el oponente:", carta2);
+
+        // Enviar la carta al host
+        socket.emit("tu carta", { carta });
+
+        // Enviar la carta al oponente
+        socket.to(room).emit("carta del oponente", { carta2 });
+    });
+
     socket.on("comenzarRonda", (roomId, personajes) => {
         const jugadoresEnSala = getJugadoresPorSala(roomId);
 
@@ -100,7 +116,7 @@ io.on("connection", (socket) => {
         }
 
         let cartasDisponibles = [...personajes];  // Los personajes vienen del frontend
-
+        socket.to(room).emit("cartaAsignada", { color });
         jugadoresEnSala.forEach(jugador => {
             const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
             io.to(jugador.id).emit("cartaAsignada", cartaAleatoria);  // Emitir la carta al jugador
@@ -109,7 +125,7 @@ io.on("connection", (socket) => {
     });
 
 });
-
+//                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
 app.get('/', function (req, res) {
     res.status(200).send({
         message: 'GET Home route working fine!'
@@ -337,13 +353,45 @@ app.get('/scaloneta', async (req, res) => {
 
 
 
+app.get('/random', async (req, res) => {
+    try {
+        const personajesJugador1 = await realizarQuery(`
+                SELECT * FROM Personajes WHERE categoria_id = 1 ORDER BY RAND() LIMIT 1
+            `);
+        const personajesJugador2 = await realizarQuery(`
+                SELECT * FROM Personajes WHERE categoria_id = 1 ORDER BY RAND() LIMIT 1
+            `);
 
+        console.log("carta:", personajesJugador1);
+        console.log("carta:", personajesJugador2);
+        if (!personajesJugador1 || personajesJugador1.length === 0 || !personajesJugador2 || personajesJugador2.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay carta" });
+        }
+        res.json({
+            ok: true,
+            carta: personajesJugador1.map(personajeJugador1 => ({
+                id: personajeJugador1.ID,
+                nombre: personajeJugador1.nombre,
+                foto: personajeJugador1.foto,
+            })),
+            carta2: personajesJugador2.map(personajeJugador2 => ({
+                id: personajeJugador2.ID,
+                nombre: personajeJugador2.nombre,
+                foto: personajeJugador2.foto,
+            }))
+        });
 
-
-
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
 
 //agregar chats
-
 app.post("/agregarChat", async function (req, res) {
     try {
         let chatId;
@@ -558,6 +606,35 @@ app.post('/agregarUsuario', async function (req, res) {
     }
 });
 
+app.post('/cartarandom', async function (req, res) {
+    console.log(req.body);
+
+    try {
+        const { nombre, contraseña, mail, es_admin } = req.body;
+
+        // Verificar si ya existe el usuario
+        const personajesJugador1 = await realizarQuery(`
+                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+            `);
+        const personajesJugador2 = await realizarQuery(`
+                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+            `);
+
+        if (vector.length === 0) {
+            await realizarQuery(`
+                INSERT INTO Usuarios (nombre, contraseña, mail, puntaje, es_admin)
+                VALUES ("${nombre}", "${contraseña}", "${mail}", 0, ${es_admin});
+            `);
+            res.send({ agregado: true });
+        } else {
+            res.send({ agregado: false, mensaje: "Ya existe ese usuario" });
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ agregado: false, error: "Error en el servidor" });
+    }
+});
 
 
 //BORRAR USUARIO
