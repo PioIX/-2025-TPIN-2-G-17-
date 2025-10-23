@@ -119,3 +119,37 @@ INSERT INTO Personajes (nombre, foto, categoria_id) VALUES
 ('Tagliafico', 'Tagliafico.png', 4),
 ('Foyth', 'Foyth.png', 4),
 ('Lo Celso', 'Lo Celso.png', 4);
+
+/*profesores*/
+INSERT INTO Personajes (nombre, foto, categoria_id) VALUES
+('Analia', 'Analia.png', 5),
+('Belen', 'Belen.png', 5),
+('Bergondi', 'Bergondi.png', 5),
+('Brenda', 'Brenda.png', 5),
+('Carolina Bruno', 'Carolina Bruno.png', 5),
+('Eugenia', 'Eugenia.png', 5),
+('Evelin', 'Evelin.png', 5),
+('Felipe Calvo', 'Felipe Calvo.png', 5),
+('Felipe Vazquez', 'Felipe Vazquez.png', 5),
+('Flavio Sturla', 'Flavio Sturla.png', 5),
+('Jessica', 'Jessica.png', 5),
+('Juan', 'Juan.png', 5),
+('Julieta', 'Julieta.png', 5),
+('Karim Nehmi', 'Karim Nehmi.png', 5),
+('Leandro', 'Leandro.png', 5),
+('Matias Marchesi', 'Matias Marchesi.png', 5),
+('Ornella', 'Ornella.png', 5),
+('Yamil', 'Yamil.png', 5),
+('Martin', 'Martin.png', 5),
+('Pablo', 'Pablo.png', 5),
+
+
+
+
+
+INSERT INTO Categorias(id, nombre) VALUES
+('1', 'farandula'),
+('2', 'famosos'),
+('3', 'cantantes'),
+('4', 'scaloneta'),
+('5', 'profesores');
