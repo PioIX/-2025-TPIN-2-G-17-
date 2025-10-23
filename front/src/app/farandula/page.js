@@ -19,6 +19,8 @@ export default function Tablero() {
     const [color, setcolor] = useState("mensaje");
     const [personajes, setPersonajes] = useState([]);
     const [descartadas, setDescartadas] = useState([]);
+    const [cartaAsignada, setCartaAsignada] = useState(null);
+
 
     async function traerPersonajes() {
         try {
@@ -31,6 +33,7 @@ export default function Tablero() {
 
 
             if (data.ok && data.personajes) {
+                localStorage.setItem("personajesFarandula", JSON.stringify(data.personajes));
                 setPersonajes(data.personajes);
             } else {
                 setPersonajes([]);
@@ -60,11 +63,8 @@ export default function Tablero() {
             console.log("📩 Nuevo mensaje:", data);
             setMensajes((prev) => [...prev, data]);
         });
-
-        return () => {
-            socket.off("newMessage");
-        };
     }, [socket]);
+
 
     function sendMessage() {
         const room = localStorage.getItem("room");
@@ -118,6 +118,19 @@ export default function Tablero() {
         return () => socket.off("updateColor");
     }, [socket]);
 
+    // carta random
+
+    useEffect(() => {
+        // Asegúrate de que socket esté disponible y la sala exista
+        const room = localStorage.getItem("room");
+        const personajes = JSON.parse(localStorage.getItem("personajesFarandula"));
+        if (room && socket) {
+            console.log("Personajes:", personajes);  // Verifica que sea un array
+            socket.emit("comenzarRonda", room, personajes);  // Emitir el evento al backend
+        }
+    }, [socket]);  // Solo se ejecuta cuando el socket está disponible
+
+
     useEffect(() => {
         if (!socket) return;
 
@@ -130,6 +143,7 @@ export default function Tablero() {
             socket.off("cartaAsignada");  // Limpiar el evento cuando el componente se desmonte
         };
     }, [socket]);
+
 
     return (
         <>
@@ -155,7 +169,7 @@ export default function Tablero() {
                         imagen={`/${p.foto}`}
                         texto={p.nombre}
                         onClick={() => handleClick(p.id)}
-                        className={descartadas.includes(p.id) ? styles.descartada : ""} 
+                        className={descartadas.includes(p.id) ? styles.descartada : ""}
                     />
                 ))}
             </div>
