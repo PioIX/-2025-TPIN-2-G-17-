@@ -13,28 +13,6 @@ import Mensajes from "@/componentes/Mensajes";
 export default function Tablero() {
     const router = useRouter()
     const { socket, isConnected } = useSocket();
-    const personajes = [
-        { id: 1, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 2, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 3, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 4, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 5, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 6, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 7, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 8, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 9, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 10, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 11, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 12, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 13, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 14, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 15, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-        { id: 16, imagen: "/Angel De Brito.png", texto: "Angel de Brito" },
-        { id: 17, imagen: "/Lizy Tagliani.png", texto: "Bomba Tucumana" },
-        { id: 18, imagen: "/China Suarez.png", texto: "China Suarez" },
-        { id: 19, imagen: "/Flor de la V.png", texto: "Flor de la V" },
-        { id: 20, imagen: "/Guido Kaczka.png", texto: "Guido Kaczka" },
-    ];
     const [mensajes, setMensajes] = useState([]);
     const [message, setMessage] = useState("");
     const [bool, setBool] = useState("");
@@ -44,6 +22,41 @@ export default function Tablero() {
     const [loading, setLoading] = useState(false);
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
     const [carta, setCarta] = useState(null);
+    const [personajes, setPersonajes] = useState([]);
+    const [descartadas, setDescartadas] = useState([]);
+
+    async function traerPersonajes() {
+        try {
+            const response = await fetch("http://localhost:4000/farandula", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+            const data = await response.json();
+            console.log("Data recibida del backend:", data);
+
+
+            if (data.ok && data.personajes) {
+                setPersonajes(data.personajes);
+            } else {
+                setPersonajes([]);
+            }
+        } catch (error) {
+            console.error("Error al traer personajes:", error);
+            setPersonajes([]);
+        }
+    }
+
+    function handleClick(id) {
+        setDescartadas((prev) => {
+            const updated = prev.includes(id) ? prev : [...prev, id];
+            console.log("IDs descartados:", updated);
+            return updated;
+        });
+    }
+
+    useEffect(() => {
+        traerPersonajes();
+    }, []);
 
     useEffect(() => {
         if (!socket) return;
@@ -58,10 +71,12 @@ export default function Tablero() {
         };
     }, [socket]);
 
-
     function sendMessage() {
-        socket.emit("sendMessage", { message });
-        console.log({ message })
+        const room = localStorage.getItem("room");
+        const nuevo = { message, color: "mensaje" };
+        // const data = { message, color}
+        socket.emit("sendMessage", { room, message });
+        console.log("Mensaje enviado:", nuevo);
     }
 
     useEffect(() => {
@@ -72,14 +87,7 @@ export default function Tablero() {
         }
     }, [socket])
 
-    function checkeado(event) {
-        setBool(event.target.value)
-        if (bool == "si") {
-            setcolor("si")
-        } else {
-            setcolor("no")
-        }
-    }
+  
 
     async function arriesgar() {
         // Verificación de que el nombre no esté vacío
@@ -128,6 +136,54 @@ export default function Tablero() {
     }
 
 
+        const value = event.target.value;
+        setBool(value);
+
+        const nuevoColor = value == "si" ? "si" : "no";
+        setcolor(nuevoColor);
+
+        setMensajes((prevMensajes) => {
+            if (prevMensajes.length == 0) return prevMensajes;
+            const nuevos = [...prevMensajes];
+            const ultimo = { ...nuevos[nuevos.length - 1] };
+            ultimo.color = nuevoColor;
+            nuevos[nuevos.length - 1] = ultimo;
+            return nuevos;
+        });
+
+        const room = localStorage.getItem("room");
+        socket.emit("colorChange", { room, color: nuevoColor });
+    }
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on("updateColor", ({ color }) => {
+            console.log("Nuevo color recibido del otro jugador:", color);
+            setMensajes((prevMensajes) => {
+                if (prevMensajes.length === 0) return prevMensajes;
+                const nuevos = [...prevMensajes];
+                const ultimo = { ...nuevos[nuevos.length - 1] };
+                ultimo.color = color;
+                nuevos[nuevos.length - 1] = ultimo;
+                return nuevos;
+            });
+        });
+        return () => socket.off("updateColor");
+    }, [socket]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on("cartaAsignada", (carta) => {
+            console.log("Tu carta asignada es:", carta);  // Verifica que la carta se reciba correctamente
+            setCartaAsignada(carta);  // Asigna la carta al jugador
+        });
+
+        return () => {
+            socket.off("cartaAsignada");  // Limpiar el evento cuando el componente se desmonte
+        };
+    }, [socket]);
+
 
     return (
         <>
@@ -137,32 +193,24 @@ export default function Tablero() {
                 </header>
 
             </div>
-            {/*
-            <div className={styles.chatBox}>
-                {mensajes.map((m, i) => (
-                    <div key={i} className={styles.mensaje}>
-                        {m.message.message || m.message}
-                    </div>
-                ))}
-            </div>
-            */}
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (
                     <Mensajes
                         key={i}
-                        texto={m.message.message || m.message}
-                        color={color}
-                    >
-                    </Mensajes>
+                        texto={m.message?.message || m.message}
+                        color={m.color || "mensaje"}
+                    /> 
+
                 ))}
             </div>
             <div className={styles.juego}>
                 {personajes.map((p) => (
                     <BotonImagen
                         key={p.id}
-                        imagen={p.imagen}
-                        texto={p.texto}
+                        imagen={`/${p.foto}`}
+                        texto={p.nombre}
                         onClick={() => handleClick(p.id)}
+                        className={descartadas.includes(p.id) ? styles.descartada : ""} 
                     />
                 ))}
             </div>
@@ -174,11 +222,14 @@ export default function Tablero() {
                 <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado} />
                 <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado} />
             </div>
+
             <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
             <Boton onClick={arriesgar} color="arriesgar">texto={"Arriesgar"}</Boton>
-            <footer>
-                <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
-            </footer>
+            <div className={styles.footer}>
+                <footer>
+                    <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
+                </footer>
+            </div>
         </>
     )
 }

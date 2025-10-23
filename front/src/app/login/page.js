@@ -11,7 +11,6 @@ export default function LoginPage() {
   const [nombre, setNombre] = useState("")
   const [contraseña, setContraseña] = useState("")
   const [mail, setMail] = useState("")
-
   const router = useRouter()
 
   async function agregarUsuarioRegistro(datos) {
@@ -25,7 +24,7 @@ export default function LoginPage() {
       console.log(result)
 
       if (result.res === "ok") {
-        router.replace("/iniciochat")
+        router.push("/inicio")
       }
     } catch (error) {
       console.log("Error", error)
@@ -33,13 +32,13 @@ export default function LoginPage() {
   }
 
   function obtenerDatosRegistro() {
-    let datos = { nombre, password: contraseña, usuario_mail: usuarioMail}
+    let datos = { nombre, contraseña, mail }
     agregarUsuarioRegistro(datos)
   }
 
   /*Login*/
   function obtenerDatos() {
-    let datos = { contraseña, mail }
+    let datos = { contraseña, nombre }
     login(datos)
   }
 
@@ -77,7 +76,7 @@ export default function LoginPage() {
       <div className={styles.section}>
         <div className={styles.container}>
           <Title texto="Inicia Sesión" color={"registro"} /><h3></h3><br />
-          <Input color={"registro"} type={"text"} placeholder={"Ingrese su usuario de mail"} id={"mail"} onChange={(event) => setMail(event.target.value)}></Input>
+          <Input color={"registro"} type={"text"} placeholder={"Ingrese su nombre"} id={"nombre"} onChange={(event) => setNombre(event.target.value)}></Input>
           <br /><br />
           <Input color={"registro"} type={"password"} placeholder={"Ingrese su contraseña"} id={"contraseña"} onChange={(event) => setContraseña(event.target.value)}></Input>
           <br /><br />
@@ -86,8 +85,8 @@ export default function LoginPage() {
         <br></br>
         <br></br>
         <div className={styles.container}>
-          <Title texto="Registro" color={"registro"}/><h3></h3><br />
-          <Input color={"registro"} type={"text"} placeholder={"Ingrese su mail"} id={"usuario_mail"} onChange={(event) => setUsuarioMail(event.target.value)}></Input>
+          <Title texto="Registro" color={"registro"} /><h3></h3><br />
+          <Input color={"registro"} type={"text"} placeholder={"Ingrese su mail"} id={"mail"} onChange={(event) => setMail(event.target.value)}></Input>
           <br /><br />
           <Input color={"registro"} type={"password"} placeholder={"Ingrese su contraseña"} id={"contraseña"} onChange={(event) => setContraseña(event.target.value)}></Input>
           <br /><br />

@@ -58,13 +58,13 @@ io.on("connection", (socket) => {
     const req = socket.request;
 
     socket.on('joinRoom', data => {
-        console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
+        console.log("🚀 ~ io.on ~ req.session.room:", data.room)
         if (req.session.room != undefined && req.session.room.length > 0)
             socket.leave(req.session.room);
         req.session.room = data.room;
-        socket.join(req.session.room);
+        socket.join(data.room);
 
-        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
+        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: data.room });
     });
 
     socket.on('pingAll', data => {
@@ -76,14 +76,53 @@ io.on("connection", (socket) => {
             io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
         });*/
     socket.on('sendMessage', ({ room, message }) => {
+        console.log("📤 Mensaje recibido en back:", { room, message });
         io.to(room).emit('newMessage', { room, message });
     });
-
-
 
     socket.on('disconnect', () => {
         console.log("Disconnect");
     })
+
+    socket.on("colorChange", ({ room, color }) => {
+        console.log(`🎨 Cambio de color en ${room}: ${color}`);
+        socket.to(room).emit("updateColor", { color });
+    });
+/*
+    socket.on("comenzarRonda", (roomId) => {
+        const jugadores = getJugadoresPorSala(roomId);  // Obtén los jugadores de esa sala
+
+        // Asegúrate de que no se repitan cartas entre los jugadores
+        let cartasDisponibles = [...personajes];  // Aquí debes pasar el array de personajes
+
+        // Asignar una carta aleatoria a cada jugador
+        jugadores.forEach(jugador => {
+            if (cartasDisponibles.length > 0) {
+                // Seleccionar una carta aleatoria
+                const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
+
+                // Guardar la carta asignada al jugador
+                cartasAsignadasPorSala[roomId] = cartasAsignadasPorSala[roomId] || {};
+                cartasAsignadasPorSala[roomId][jugador.id] = cartaAleatoria;
+
+                // Emitir la carta asignada al jugador
+                socket.to(jugador.id).emit("cartaAsignada", cartaAleatoria);
+            }
+        });
+    });
+*/
+    socket.on("comenzarRonda", (roomId) => {
+        const jugadores = getJugadoresPorSala(roomId);  // Obtén los jugadores de esa sala
+        let cartasDisponibles = [...personajes];  // Cartas disponibles
+
+        jugadores.forEach(jugador => {
+            const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
+            io.to(jugador.id).emit("cartaAsignada", cartaAleatoria);  // Emitir la carta al jugador
+            console.log("Carta asignada a", jugador.id, cartaAleatoria);
+        });
+    });
+
+
 });
 
 app.get('/', function (req, res) {
@@ -105,7 +144,7 @@ app.post('/login', async function (req, res) {
     try {
         const resultado = await realizarQuery(`
             SELECT * FROM Usuarios 
-            WHERE mail = '${req.body.mail}' AND contraseña = '${req.body.contraseña}'
+            WHERE nombre = '${req.body.nombre}' AND contraseña = '${req.body.contraseña}'
         `);
         if (resultado.length != 0) {
             if (resultado[0].es_admin === 0) {
@@ -130,19 +169,17 @@ app.post('/login', async function (req, res) {
 app.post('/registro', async function (req, res) {
     try {
         console.log(req.body)
-        vector = await realizarQuery(`SELECT * FROM Usuarios WHERE usuario_mail='${req.body.usuario_mail}'`)
+        vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre='${req.body.nombre}'`)
 
         if (vector.length == 0) {
             realizarQuery(`
-                INSERT INTO Usuarios (usuario_mail, password, nombre, foto_perfil) VALUES
-                    ('${req.body.usuario_mail}','${req.body.password}','${req.body.nombre}','');
+                INSERT INTO Usuarios (nombre, contraseña, mail, puntaje, es_admin) VALUES
+                    ('${req.body.nombre}','${req.body.contraseña}','${req.body.mail}',0, 0);
             `)
-
+            res.send({ res: "ok", agregado: true })
         } else {
             res.send({ res: "Ya existe ese dato", agregado: false })
         }
-
-
     } catch (e) {
         res.status(500).send({
             agregado: false,
@@ -199,6 +236,120 @@ app.post("/traerUsuarios", async function (req, res) {
         res.send({ ok: false, mensaje: "Error en el servidor", error: error.message });
     }
 });
+
+//JUEGO
+app.get('/farandula', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 1");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
+        }
+        res.json({
+            ok: true,
+            personajes: personajes.map(personaje => ({
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
+app.get('/famosos', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 2");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
+        }
+        res.json({
+            ok: true,
+            personajes: personajes.map(personaje => ({
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
+app.get('/cantantes', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 3");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
+        }
+        res.json({
+            ok: true,
+            personajes: personajes.map(personaje => ({
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
+app.get('/scaloneta', async (req, res) => {
+    try {
+        const personajes = await realizarQuery("SELECT * FROM Personajes WHERE categoria_id = 4");
+        console.log("personajes:", personajes);
+        if (!personajes || personajes.length === 0) {
+            return res.json({ ok: false, mensaje: "No hay personajes" });
+        }
+        res.json({
+            ok: true,
+            personajes: personajes.map(personaje => ({
+                id: personaje.ID,
+                nombre: personaje.nombre,
+                foto: personaje.foto,
+                categoria_id: personaje.categoria_id
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error en la consulta:", error);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error en el servidor",
+            error: error.message
+        });
+    }
+});
+
+
+
+
+
 
 
 
@@ -323,36 +474,6 @@ app.post('/eliminarContacto', async function (req, res) {
             error: error.message
         });
     }
-});
-
-
-/* ACA ARRANCA LO DEL SOCKET */
-io.on("connection", (socket) => {
-    const req = socket.request;
-
-    socket.on('joinRoom', data => {
-        console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
-        if (req.session.room != undefined && req.session.room.length > 0)
-            socket.leave(req.session.room);
-        req.session.room = data.room;
-        socket.join(req.session.room);
-
-        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
-    });
-
-    socket.on('pingAll', data => {
-        console.log("PING ALL: ", data);
-        io.emit('pingAll', { event: "Ping to all", message: data });
-    });
-
-    socket.on('sendMessage', data => {
-        console.log("📤 Mensaje recibido en back:", data);
-        io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data, /*usuario: req.session.user*/ usuario: data.usuario });
-    });
-
-    socket.on('disconnect', () => {
-        console.log("Disconnect");
-    })
 });
 
 //subir mensajes a bbdd
