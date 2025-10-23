@@ -54,6 +54,8 @@ io.use((socket, next) => {
     A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
 */
 
+let jugadores = {};
+
 io.on("connection", (socket) => {
     const req = socket.request;
 
@@ -88,40 +90,23 @@ io.on("connection", (socket) => {
         console.log(`🎨 Cambio de color en ${room}: ${color}`);
         socket.to(room).emit("updateColor", { color });
     });
-/*
-    socket.on("comenzarRonda", (roomId) => {
-        const jugadores = getJugadoresPorSala(roomId);  // Obtén los jugadores de esa sala
 
-        // Asegúrate de que no se repitan cartas entre los jugadores
-        let cartasDisponibles = [...personajes];  // Aquí debes pasar el array de personajes
+    socket.on("comenzarRonda", (roomId, personajes) => {
+        const jugadoresEnSala = getJugadoresPorSala(roomId);
 
-        // Asignar una carta aleatoria a cada jugador
-        jugadores.forEach(jugador => {
-            if (cartasDisponibles.length > 0) {
-                // Seleccionar una carta aleatoria
-                const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
+        if (!Array.isArray(personajes)) {
+            console.error("Personajes no es un array:", personajes);
+            return;
+        }
 
-                // Guardar la carta asignada al jugador
-                cartasAsignadasPorSala[roomId] = cartasAsignadasPorSala[roomId] || {};
-                cartasAsignadasPorSala[roomId][jugador.id] = cartaAleatoria;
+        let cartasDisponibles = [...personajes];  // Los personajes vienen del frontend
 
-                // Emitir la carta asignada al jugador
-                socket.to(jugador.id).emit("cartaAsignada", cartaAleatoria);
-            }
-        });
-    });
-*/
-    socket.on("comenzarRonda", (roomId) => {
-        const jugadores = getJugadoresPorSala(roomId);  // Obtén los jugadores de esa sala
-        let cartasDisponibles = [...personajes];  // Cartas disponibles
-
-        jugadores.forEach(jugador => {
+        jugadoresEnSala.forEach(jugador => {
             const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
             io.to(jugador.id).emit("cartaAsignada", cartaAleatoria);  // Emitir la carta al jugador
             console.log("Carta asignada a", jugador.id, cartaAleatoria);
         });
     });
-
 
 });
 
@@ -130,6 +115,10 @@ app.get('/', function (req, res) {
         message: 'GET Home route working fine!'
     });
 });
+
+function getJugadoresPorSala(roomId) {
+    return jugadores[roomId] || [];
+}
 
 /**
  * req = request. en este objeto voy a tener todo lo que reciba del cliente

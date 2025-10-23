@@ -65,15 +65,6 @@
   gap: 8px;
 }
 
-/*
-.mensaje {
-  background-color: white;
-  border-radius: 8px;
-  padding: 8px 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-*/
-
 .descartada {
   filter: grayscale(100%) contrast(50%);
   opacity: 1;
