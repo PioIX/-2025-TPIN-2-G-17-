@@ -43,6 +43,7 @@ export default function Tablero() {
     const [mensaje, setMensaje] = useState("");
     const [loading, setLoading] = useState(false);
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
+    const [carta, setCarta] = useState(null);
 
     useEffect(() => {
         if (!socket) return;
@@ -62,6 +63,7 @@ export default function Tablero() {
         socket.emit("sendMessage", { message });
         console.log({ message })
     }
+
     useEffect(() => {
         if (!socket) return;
         let room = localStorage.getItem("room")
@@ -81,7 +83,7 @@ export default function Tablero() {
 
     async function arriesgar() {
         // Verificación de que el nombre no esté vacío
-        if (!nombreArriesgado.trim()) {
+        if (nombreArriesgado.trim() === "") {
             alert("Ingresá un nombre antes de arriesgar");
             return;
         }
@@ -89,7 +91,6 @@ export default function Tablero() {
         setLoading(true);  // Inicia el estado de carga
 
         try {
-            // Realiza la petición al backend
             const res = await fetch("http://localhost:4000/arriesgar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -110,7 +111,7 @@ export default function Tablero() {
                 if (result.ganador) {
                     setMensaje(`¡Felicidades, ganaste! El personaje correcto era ${nombreArriesgado}.`);
                 } else {
-                    setMensaje(`Lo siento, perdiste. El personaje correcto era ${result.personajeCorrecto}.`);
+                    setMensaje(`Perdiste. El personaje correcto era ${result.personajeCorrecto}.`);
                 }
 
                 // Si el jugador ganó o perdió, redirigir a la página de inicio
@@ -123,7 +124,7 @@ export default function Tablero() {
             alert("Error al conectar con el servidor");
         }
 
-        setLoading(false);  // Termina el estado de carga
+        setLoading(false);
     }
 
 
@@ -175,12 +176,9 @@ export default function Tablero() {
             </div>
             <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
             <Boton onClick={arriesgar} color="arriesgar">texto={"Arriesgar"}</Boton>
-            <div className={styles.footer}>
-                <footer>
-                    <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
-                </footer>
-
-            </div>
+            <footer>
+                <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
+            </footer>
         </>
     )
 }

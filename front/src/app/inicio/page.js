@@ -16,6 +16,7 @@ export default function LoginPage() {
     const [jugadorId, setJugadorId] = useState(null);
 
     useEffect(() => {
+        console.log(localStorage.getItem("ID"));
         if (typeof window !== "undefined") {
             const id = localStorage.getItem("ID");
             if (id) {
@@ -23,16 +24,16 @@ export default function LoginPage() {
             }
         }
     }, []);
- 
+
     async function manejarSeleccionCategoria(categoriaId) {
         if (!jugadorId) {
             alert("No se encontró el ID del jugador. Por favor, inicia sesión.");
             return;
         }
 
-        setCategoriaSeleccionada(categoriaId); 
+        setCategoriaSeleccionada(categoriaId);
         setLoading(true);
-        setMensaje(""); 
+        setMensaje("");
 
         try {
             const res = await fetch("http://localhost:4000/crearPartida", {
@@ -47,13 +48,15 @@ export default function LoginPage() {
             });
 
             const result = await res.json();
-            setMensaje(result.msg); 
+            setMensaje(result.msg);
 
+            console.log(result)
+            console.log(result.userHost)
             if (result.ok) {
                 if (result.esperando) {
-                    setMensaje("Esperando oponente...");
+
                 } else {
-                    router.push(`/${result.nombreCategoria}`); 
+                    router.push(`/${result.nombreCategoria}`);
                 }
             } else {
                 setMensaje("Hubo un problema al crear la partida.");
@@ -69,34 +72,25 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (socket) {
-            socket.on("partidaCreada", async (data) => {
-                try {
-                    const res = await fetch('http://localhost:4000/otraOperación', {
-                        method: 'POST',
-                        body: JSON.stringify({ id: data.jugador1_id }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    });
+            socket.on("partidaCreada", (data) => {
+                console.log("Evento recibido:", data);
 
-                    const result = await res.json();
-
-                    if (result.ok) {
-                        setMensaje("La partida ha comenzado!");
-                        router.push(`/${data.nombreCategoria}`);
+                if (data.ok && !data.esperando) {
+                    setMensaje("¡La partida ha comenzado!");
+                    router.push(`/${data.nombreCategoria}`);
+                } else if (data.esperando) {
+                    if (Number(data.userHost) === localStorage.getItem("ID")) {
+                        setMensaje("Esperando oponente...");
                     }
-                } catch (error) {
-                    console.error("Error en la operación asincrónica:", error);
                 }
             });
-
             return () => {
                 socket.off("partidaCreada");
             };
         }
     }, [socket, router]);
 
-    // Funciones para cada categoría
+    
     const irFamosos = () => {
         manejarSeleccionCategoria(2);
         socket.emit("joinRoom", { room: "famosos" });

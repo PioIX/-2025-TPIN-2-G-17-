@@ -33,6 +33,8 @@ const io = require('socket.io')(server, {
     }
 });
 
+
+
 const sessionMiddleware = session({
     //Elegir tu propia key secreta
     secret: "supersarasa",
@@ -515,17 +517,18 @@ app.post('/crearPartida', async (req, res) => {
 
             await realizarQuery(`
                 INSERT INTO Partidas (jugador1_id, jugador2_id, personaje_jugador1_id, personaje_jugador2_id, estado)
-                VALUES (${jugador1_id}, ${jugador2_id}, ${personajeJugador1_id}, ${personajeJugador2_id}, 'en espera')
+                VALUES (${jugador1_id}, ${jugador2_id}, ${personajeJugador1_id}, ${personajeJugador2_id}, 'en curso')
             `);
 
             await realizarQuery(`
                 UPDATE Usuarios SET esperando_categoria = NULL WHERE ID IN (${jugador1_id}, ${jugador2_id})
             `);
 
-            socket.emit("partidaCreada", {
+            io.emit("partidaCreada", {
                 ok: true,
                 msg: "Partida creada con éxito",
-                nombreCategoria
+                nombreCategoria,
+                userHost: jugador1_id,
             });
 
             return res.send({ ok: true, msg: "Partida creada con éxito", nombreCategoria });
@@ -535,10 +538,11 @@ app.post('/crearPartida', async (req, res) => {
                 UPDATE Usuarios SET esperando_categoria = ${categoria_id} WHERE ID = ${jugador1_id}
             `);
 
-            socket.emit("partidaCreada", {
+            io.emit("partidaCreada", {
                 ok: true,
                 msg: "Esperando oponente...",
                 esperando: true,
+                userHost: jugador1_id,
                 nombreCategoria
             });
 
