@@ -12,6 +12,11 @@ import Mensajes from "@/componentes/Mensajes";
 
 export default function Tablero() {
     const router = useRouter()
+    const partida = JSON.parse(localStorage.getItem("partidaActual"));
+    const jugadorId = parseInt(localStorage.getItem("ID"));
+
+    const [nombreArriesgado, setNombreArriesgado] = useState("");
+    const [mensaje, setMensaje] = useState("");
     const { socket, isConnected } = useSocket();
     const [mensajes, setMensajes] = useState([]);
     const [message, setMessage] = useState("");
@@ -19,6 +24,34 @@ export default function Tablero() {
     const [color, setcolor] = useState("mensaje");
     const [personajes, setPersonajes] = useState([]);
     
+    async function arriesgar() {
+        if (!nombreArriesgado.trim()) {
+            alert("Ingresá un nombre antes de arriesgar");
+            return;
+        }
+
+        try {
+            const res = await fetch("http://localhost:4000/arriesgar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id_partida: partida.ID,
+                    id_jugador: jugadorId,
+                    nombre_arriesgado: nombreArriesgado
+                }),
+            });
+
+            const result = await res.json();
+            setMensaje(result.msg);
+
+            if (result.ok) {
+                router.push("/inicio");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error al conectar con el servidor");
+        }
+    }
     async function traerPersonajes() {
         try {
             const response = await fetch("http://localhost:4000/scaloneta", {
@@ -109,7 +142,7 @@ export default function Tablero() {
             });
         });
         return () => socket.off("updateColor");
-    }, [socket]);
+    }, [socket]); 
 
     return (
         <>
@@ -146,6 +179,8 @@ export default function Tablero() {
                 <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado} />
                 <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado} />
             </div>
+            <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro"  onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
+            <Boton onClick={arriesgar} color="arriesgar">texto={Arriesgar}</Boton>
             <div className={styles.footer}>
                 <footer>
                     <h2>Arrufat - Gaetani - Suarez - Zuran</h2>

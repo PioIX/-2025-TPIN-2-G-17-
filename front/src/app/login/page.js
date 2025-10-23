@@ -56,6 +56,7 @@ export default function LoginPage() {
       const result = await response.json();
       if (result.ok) {
         localStorage.setItem('ID', result.id);
+        console.log(result.id);
         if (result.admin === true) {
           router.replace('/administrador')
         } else {

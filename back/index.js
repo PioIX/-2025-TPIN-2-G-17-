@@ -33,6 +33,8 @@ const io = require('socket.io')(server, {
     }
 });
 
+
+
 const sessionMiddleware = session({
     //Elegir tu propia key secreta
     secret: "supersarasa",
@@ -592,65 +594,126 @@ app.delete('/borrarUsuario', async function (req, res) {
     }
 });
 
-//Agregar autor
-app.post('/agregarAutor', async function (req, res) {
-    try {
-        const { nombre, apellido, origen, imagen } = req.body;
+//Crear partida
 
-        if (!nombre || !apellido || !origen || !imagen) {
-            return res.send({ ok: false, mensaje: "Faltan datos" });
+app.post('/crearPartida', async (req, res) => {
+    const { categoria_id, jugador1_id } = req.body;
+
+    // Verifica si el cuerpo de la solicitud contiene datos
+    console.log('Cuerpo de la solicitud:', req.body); // Verifica que el cuerpo esté llegando correctamente
+
+    try {
+        // Verifica si los datos necesarios están presentes
+        if (!categoria_id || !jugador1_id) {
+            console.error('Faltan datos necesarios en la solicitud');
+            return res.status(400).send({ ok: false, msg: 'Faltan datos en la solicitud' });
         }
 
-        await realizarQuery(`
-            INSERT INTO Autores (nombre, apellido, origen, imagen)
-            VALUES ('${nombre}', '${apellido}', '${origen}', '${imagen}');
+        const oponente = await realizarQuery(`
+            SELECT * FROM Usuarios WHERE esperando_categoria = ${categoria_id} AND ID != ${jugador1_id} LIMIT 1
         `);
 
-        res.send({ ok: true, mensaje: "Autor agregado correctamente" });
-    } catch (error) {
-        console.error("Error al agregar autor:", error);
-        res.send({ ok: false, mensaje: "Error en el servidor", error: error.message });
-    }
-});
+        const categoria = await realizarQuery(`
+            SELECT nombre FROM Categorias WHERE ID = ${categoria_id}
+        `);
 
-//modificar frases
-app.put('/modificarFrase', async function (req, res) {
-    try {
-        await realizarQuery(`UPDATE Frases SET
-            contenido = '${req.body.contenido}', procedencia = '${req.body.procedencia}', id_autor = ${req.body.id_autor}, id_autor_incorrecto = ${req.body.id_autor_incorrecto} WHERE ID = ${req.body.id};`);
-
-        res.send({ ok: true, mensaje: "Frase modificada correctamente" });
-    } catch (e) {
-        console.log("ERROR:", e.message);
-        res.send({ ok: false, mensaje: "Error en la modificación", error: e.message });
-    }
-});
-
-const turnos = {};  // Guardar el turno de cada sala
-
-io.on("connection", (socket) => {
-    socket.on("joinRoom", (data) => {
-        const room = data.room;
-        socket.join(room);
-
-        if (!turnos[room]) {
-            turnos[room] = 'yo'; // El primer jugador tiene el turno
+        if (categoria.length === 0) {
+            return res.status(404).send({ ok: false, msg: "Categoría no encontrada" });
         }
 
-        socket.emit("cambioTurno", turnos[room]);
-    });
+        const nombreCategoria = categoria[0].nombre;
 
-    socket.on("sendMessage", ({ room, message }) => {
-        io.to(room).emit('newMessage', { room, message });
+        if (oponente.length > 0) {
+            const jugador2_id = oponente[0].ID;
 
-        const siguienteTurno = turnos[room] === 'yo' ? 'oponente' : 'yo';
-        turnos[room] = siguienteTurno;
-        io.to(room).emit("cambioTurno", siguienteTurno);  // Emitir el cambio de turno
-    });
+            const personajesJugador1 = await realizarQuery(`
+                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+            `);
+            const personajesJugador2 = await realizarQuery(`
+                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+            `);
 
-    socket.on("disconnect", () => {
-        console.log("Usuario desconectado");
-    });
+            const personajeJugador1_id = personajesJugador1[0].ID;
+            const personajeJugador2_id = personajesJugador2[0].ID;
+
+            await realizarQuery(`
+                INSERT INTO Partidas (jugador1_id, jugador2_id, personaje_jugador1_id, personaje_jugador2_id, estado)
+                VALUES (${jugador1_id}, ${jugador2_id}, ${personajeJugador1_id}, ${personajeJugador2_id}, 'en curso')
+            `);
+
+            await realizarQuery(`
+                UPDATE Usuarios SET esperando_categoria = NULL WHERE ID IN (${jugador1_id}, ${jugador2_id})
+            `);
+
+            io.emit("partidaCreada", {
+                ok: true,
+                msg: "Partida creada con éxito",
+                nombreCategoria,
+                userHost: jugador1_id,
+            });
+
+            return res.send({ ok: true, msg: "Partida creada con éxito", nombreCategoria });
+
+        } else {
+            await realizarQuery(`
+                UPDATE Usuarios SET esperando_categoria = ${categoria_id} WHERE ID = ${jugador1_id}
+            `);
+
+            io.emit("partidaCreada", {
+                ok: true,
+                msg: "Esperando oponente...",
+                esperando: true,
+                userHost: jugador1_id,
+                nombreCategoria
+            });
+
+            return res.send({ ok: true, msg: "Esperando oponente...", esperando: true, nombreCategoria });
+        }
+
+    } catch (err) {
+        console.error('Error en backend:', err);  // Asegúrate de capturar el error completo
+        return res.status(500).send({ ok: false, msg: "Error al crear partida", error: err.message });
+    }
 });
 
 
+
+
+//arriesgar personaje
+
+app.post("/arriesgar", async (req, res) => {
+    const { id_partida, id_jugador, nombre_arriesgado } = req.body;
+
+    try {
+        const [partida] = await realizarQuery(`SELECT * FROM Partidas WHERE ID = ${id_partida}`);
+        if (!partida) return res.send({ ok: false, msg: "Partida no encontrada" });
+
+        const esJugador1 = id_jugador === partida.jugador1_id;
+        const personajeOponenteId = esJugador1
+            ? partida.personaje_jugador2_id
+            : partida.personaje_jugador1_id;
+
+        const [personajeOponente] = await realizarQuery(`SELECT * FROM Personajes WHERE ID = ${personajeOponenteId}`);
+        if (!personajeOponente) return res.send({ ok: false, msg: "No se encontró el personaje del oponente" });
+
+        if (nombre_arriesgado.trim().toLowerCase() === personajeOponente.nombre.trim().toLowerCase()) {
+            await realizarQuery(`
+        UPDATE Partidas
+        SET ganador_id = ${id_jugador}, estado = 'finalizada'
+        WHERE ID = ${id_partida};
+      `);
+            res.send({ ok: true, gano: true, msg: "¡Adivinaste! Ganaste la partida." });
+        } else {
+            const ganador = esJugador1 ? partida.jugador2_id : partida.jugador1_id;
+            await realizarQuery(`
+        UPDATE Partidas
+        SET ganador_id = ${ganador}, estado = 'finalizada'
+        WHERE ID = ${id_partida};
+      `);
+            res.send({ ok: true, gano: false, msg: "Fallaste. La partida terminó." });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ ok: false, msg: "Error en el servidor" });
+    }
+});
