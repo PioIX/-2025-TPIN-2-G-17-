@@ -58,9 +58,14 @@ export default function Tablero() {
     }
 
     useEffect(() => {
-        traerPersonajes();
-        traerCarta();
-    }, []);
+        if (socket && socket.connected) {
+            console.log("✅ Socket conectado, llamando traerCarta");
+            traerCarta();
+            traerPersonajes();
+        } else {
+            console.log("❌ Socket no disponible o no conectado");
+        }
+    }, [socket]);
 
     useEffect(() => {
         if (!socket) return;
@@ -202,37 +207,6 @@ export default function Tablero() {
         };
     }, [socket]);
     */
-    useEffect(() => {
-        // Asegúrate de que socket esté disponible y la sala exista
-        const room = localStorage.getItem("room");
-        const carta = JSON.parse(localStorage.getItem("carta"));
-        const carta2 = JSON.parse(localStorage.getItem("carta2"));
-        if (room && socket) {
-            socket.emit("cartaRandom", room, carta, carta2);  // Emitir el evento al backend
-        }
-    }, [socket]);
-
-    useEffect(() => {
-        if (!socket) return;
-
-        // Recibe la carta del host
-        socket.on("tu carta", ({ carta }) => {
-            console.log("Tu carta (host):", carta);  // Aquí deberías ver la carta del host
-            setCartaAsignada(carta);  // Guardamos la carta del host en el estado
-        });
-
-        // Recibe la carta del oponente
-        socket.on("carta del oponente", ({ carta2 }) => {
-            console.log("Carta del oponente:", carta2);  // Aquí deberías ver la carta del oponente
-            setCartaAsignada2(carta2);  // Guardamos la carta del oponente en el estado
-        });
-
-        return () => {
-            socket.off("tu carta");
-            socket.off("carta del oponente");
-        };
-    }, [socket]);
-
     async function traerCarta() {
         try {
             const response = await fetch("http://localhost:4000/random", {
@@ -243,22 +217,49 @@ export default function Tablero() {
             console.log("Data recibida del backend:", data);
 
             if (data.ok) {
-                //localStorage.setItem("personajesFarandula", JSON.stringify(data.personajes));
-                setCartaAsignada(data.carta);
-                setCartaAsignada2(data.carta2);
-                localStorage.setItem("carta", JSON.stringify(data.carta));
-                localStorage.setItem("carta2", JSON.stringify(data.carta2));
-            } else {
-                setCartaAsignada([]);
-                setCartaAsignada2([]);
+                const carta = Array.isArray(data.carta) ? data.carta[0] : data.carta;
+                const carta2 = Array.isArray(data.carta2) ? data.carta2[0] : data.carta2;
+
+                localStorage.setItem("carta", JSON.stringify(carta));
+                localStorage.setItem("carta2", JSON.stringify(carta2));
+
+                const room = localStorage.getItem("room");
+                const miId = localStorage.getItem("ID");
+
+                console.log("🔍 MI ID:", miId); // 👈 Agregá esto
+                console.log("🔍 ROOM:", room); // 👈 Y esto
+                console.log("🔍 CARTA:", carta); // 👈 Y esto
+                console.log("🔍 CARTA2:", carta2); // 👈 Y esto
+
+                if (room && socket && miId) {
+                    socket.emit("cartaRandom", {
+                        room,
+                        carta,
+                        carta2,
+                        jugadorId: miId
+                    });
+                    console.log("✅ Evento cartaRandom emitido"); // 👈 Y esto
+                } else {
+                    console.error("❌ Falta algún dato:", { room, socket: !!socket, miId });
+                }
             }
         } catch (error) {
             console.error("Error al traer cartas:", error);
-            setCartaAsignada([]);
-            setCartaAsignada2([]);
         }
     }
 
+    // useEffect para escuchar la carta asignada
+    useEffect(() => {
+        if (!socket) return;
+        socket.on("tuCarta", ({ carta }) => {
+            console.log("Tu carta asignada:", carta);
+            setCartaAsignada(carta);
+        });
+
+        return () => {
+            socket.off("tuCarta");
+        };
+    }, [socket]);
 
     return (
         <>

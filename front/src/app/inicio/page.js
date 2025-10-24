@@ -54,7 +54,7 @@ export default function LoginPage() {
             console.log(result.userHost)
             if (result.ok) {
                 if (result.esperando) {
-
+                    setMensaje("Esperando oponente...");
                 } else {
                     router.push(`/${result.nombreCategoria}`);
                 }

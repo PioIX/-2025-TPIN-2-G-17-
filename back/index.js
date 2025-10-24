@@ -91,40 +91,36 @@ io.on("connection", (socket) => {
         socket.to(room).emit("updateColor", { color });
     });
 
-    socket.on("cartaRandom", ({ room, carta, carta2 }) => {
+    socket.on("cartaRandom", ({ room, carta, carta2, jugadorId }) => {
+        console.log("📥 Evento cartaRandom recibido");
+        console.log("📥 Room:", room);
+        console.log("📥 JugadorId recibido:", jugadorId, "Tipo:", typeof jugadorId);
+        console.log("📥 Carta:", carta);
+        console.log("📥 Carta2:", carta2);
+
         if (!carta || !carta2) {
             console.error("Una de las cartas es undefined:", carta, carta2);
             return;
         }
 
-        console.log("Carta para el host:", carta);
-        console.log("Carta para el oponente:", carta2);
+        // Obtener los jugadores de la sala
+        const jugadoresEnSala = getJugadoresPorSala(room);
+        console.log("👥 Jugadores en sala:", jugadoresEnSala);
 
-        // Enviar la carta al host
-        socket.emit("tu carta", { carta });
+        if (jugadoresEnSala.length === 2) {
+            // Quien emitió el evento recibe carta
+            socket.emit("tuCarta", { carta });
+            console.log("✅ Carta enviada al emisor (socket.id):", socket.id);
 
-        // Enviar la carta al oponente
-        socket.to(room).emit("carta del oponente", { carta2 });
-    });
-
-    socket.on("comenzarRonda", (roomId, personajes) => {
-        const jugadoresEnSala = getJugadoresPorSala(roomId);
-
-        if (!Array.isArray(personajes)) {
-            console.error("Personajes no es un array:", personajes);
-            return;
+            // El resto de la sala recibe carta2
+            socket.to(room).emit("tuCarta", { carta: carta2 });
+            console.log("✅ Carta2 enviada a la sala:", room);
+        } else {
+            console.error("❌ Se necesitan 2 jugadores, hay:", jugadoresEnSala.length);
         }
-
-        let cartasDisponibles = [...personajes];  // Los personajes vienen del frontend
-        socket.to(room).emit("cartaAsignada", { color });
-        jugadoresEnSala.forEach(jugador => {
-            const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
-            io.to(jugador.id).emit("cartaAsignada", cartaAleatoria);  // Emitir la carta al jugador
-            console.log("Carta asignada a", jugador.id, cartaAleatoria);
-        });
     });
-
 });
+
 //                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
 app.get('/', function (req, res) {
     res.status(200).send({
