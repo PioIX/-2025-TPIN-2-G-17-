@@ -71,4 +71,46 @@
 
 }
 
+/* Contenedor de la carta */
+/* Contenedor de la carta alineado a la derecha */
+.carta {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos se acomoden en varias filas si es necesario */
+    justify-content: flex-end; /* Alinea los elementos a la derecha */
+    gap: 15px; /* Espaciado entre los botones */
+    position: relative; /* Esto es necesario si quieres posicionar algo dentro */
+    padding-right: 20px; /* Asegúrate de que no haya contacto con el borde */
+    margin-right: 15%;
+    margin-bottom: 50%;
+}
+
+/* Para los botones dentro de la carta */
+.carta > .botonImagen {
+    width: 150px; /* Tamaño de cada imagen (ajústalo a tu gusto) */
+    height: 150px; /* Asegúrate de que las imágenes tengan un tamaño adecuado */
+    object-fit: cover; /* Para que las imágenes se ajusten sin deformarse */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto hover para el botón */
+.carta > .botonImagen:hover {
+    transform: scale(1.05); /* Hace que el botón crezca ligeramente cuando se pasa el ratón */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Para el texto dentro del botón de imagen */
+.carta > .botonImagen span {
+    font-weight: bold;
+    color: #333;
+    margin-top: 8px;
+}
+
 

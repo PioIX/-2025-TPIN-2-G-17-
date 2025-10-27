@@ -300,6 +300,19 @@ export default function Tablero() {
 
             <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
             <Boton onClick={arriesgar} color="arriesgar">texto={"Arriesgar"}</Boton>
+
+            <div className={styles.carta}>
+                {cartaAsignada.map((p) => (
+                    <BotonImagen
+                        key={p.id}
+                        imagen={`/${p.foto}`}
+                        texto={p.nombre}
+                        onClick={() => handleClick(p.id)}
+                        className={descartadas.includes(p.id) ? styles.descartada : ""}
+                    />
+                ))}
+            </div>
+
             <div className={styles.footer}>
                 <footer>
                     <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
