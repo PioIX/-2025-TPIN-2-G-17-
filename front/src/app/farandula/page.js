@@ -302,6 +302,7 @@ export default function Tablero() {
             <Boton onClick={arriesgar} color="arriesgar">texto={"Arriesgar"}</Boton>
 
             <div className={styles.carta}>
+                <h2>Tu carta:</h2>
                 {cartaAsignada.map((p) => (
                     <BotonImagen
                         key={p.id}
