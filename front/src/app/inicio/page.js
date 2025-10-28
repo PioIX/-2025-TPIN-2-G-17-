@@ -48,7 +48,7 @@ export default function LoginPage() {
             });
 
             const result = await res.json();
-            setMensaje(result.msg);
+            setMensaje(result.mensaje);
 
             console.log(result)
             console.log(result.userHost)

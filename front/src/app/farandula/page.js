@@ -91,13 +91,12 @@ export default function Tablero() {
 
 
     async function arriesgar() {
-        // Verificación de que el nombre no esté vacío
         if (nombreArriesgado.trim() === "") {
             alert("Ingresá un nombre antes de arriesgar");
             return;
         }
 
-        setLoading(true);  // Inicia el estado de carga
+        setLoading(true);
 
         try {
             const res = await fetch("http://localhost:4000/arriesgar", {
@@ -110,23 +109,18 @@ export default function Tablero() {
                 }),
             });
 
-            // Parsear la respuesta a JSON
             const result = await res.json();
-
-            // Actualizar el mensaje en el estado
-            setMensaje(result.msg);
+            setMensaje(result.mensaje);
 
             if (result.ok) {
-                if (result.ganador) {
-                    setMensaje(`¡Felicidades, ganaste! El personaje correcto era ${nombreArriesgado}.`);
+                if (result.gano) {
+                    alert(`¡Ganaste! El personaje correcto era ${result.personajeCorrecto}.`);
                 } else {
-                    setMensaje(`Perdiste. El personaje correcto era ${result.personajeCorrecto}.`);
+                    alert(`Perdiste. El personaje correcto era ${result.personajeCorrecto}.`);
                 }
-
-                // Si el jugador ganó o perdió, redirigir a la página de inicio
                 router.push("/inicio");
             } else {
-                setMensaje("Hubo un problema al realizar el arriesgue.");
+                alert("Hubo un problema al realizar el arriesgue.");
             }
         } catch (error) {
             console.error(error);
