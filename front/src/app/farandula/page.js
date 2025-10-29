@@ -26,6 +26,10 @@ export default function Tablero() {
     const [descartadas, setDescartadas] = useState([]);
     const [cartaAsignada, setCartaAsignada] = useState([]);
     const [cartaAsignada2, setCartaAsignada2] = useState([]);
+    const [segundos, setSegundos] = useState(5);
+    const [turno, setTurno] = useState(1);
+    const [jugadorActivo, setJugadorActivo] = useState(true);
+
 
     async function traerPersonajes() {
         try {
@@ -259,6 +263,54 @@ export default function Tablero() {
         }
     }
 
+    //temporizador (lo hizo chatg)
+    useEffect(() => {
+    if (socket) {
+        console.log("Socket está conectado");
+        // Cualquier otro código de socket que necesites
+    } else {
+        console.log("Socket no está disponible");
+    }
+}, [socket]); // Esto se ejecutará cada vez que socket cambie
+
+    useEffect(() => {
+        if (!jugadorActivo) return;
+        const timer = setInterval(() => {
+            setSegundos(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);  // Detiene el temporizador cuando llega a 0
+                    CambioTurno();    // Cambia el turno
+                    return 0;  // Establece el temporizador en 0
+                }
+                return prev - 1;  // Resta un segundo
+            });
+        }, 1000);
+
+        return () => clearInterval(timer); // Limpia el intervalo cuando el componente se desmonte
+    }, [jugadorActivo]);
+
+    const CambioTurno = () => {
+        // Asegurarse de que socket esté disponible
+        if (socket && socket.emit) {
+            socket.emit('cambiarTurno', { turnoSiguiente: turno == 1 ? 2 : 1 });
+            console.log("Cambio de turno emitido");
+        } else {
+            console.log("Socket no disponible");
+        }
+        setTurno(turno == 1 ? 2 : 1);  // Cambia el turno
+        setJugadorActivo(turno == 2);  // El siguiente jugador ahora tiene el turno activo
+    };
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on("actualizarTurno", ({ turnoActivo }) => {
+            setTurno(turnoActivo);
+            setJugadorActivo(turnoActivo == 1);  // Si el turno es 1, el jugador 1 es el activo
+        });
+        return () => {
+            socket.off("actualizarTurno");  // Limpia el evento cuando el componente se desmonte
+        };
+    }, [socket]);
 
     return (
         <>
@@ -267,6 +319,11 @@ export default function Tablero() {
                     <Title texto={"¿Quién es quién?"} />
                 </header>
 
+            </div>
+            <div className={styles.timer}>
+                <h1>Turno del Jugador {turno}</h1>
+                <p>Tiempo restante: {segundos} segundos</p>
+                {/* Aquí va el resto de tu juego */}
             </div>
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (

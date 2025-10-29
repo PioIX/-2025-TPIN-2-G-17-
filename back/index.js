@@ -124,8 +124,17 @@ io.on("connection", (socket) => {
         });
     });
 
+    //timer 
+    // Evento para cambiar el turno
+    socket.on('cambiarTurno', ({ turnoSiguiente }) => {
+        turnoActivo = turnoSiguiente;  // Cambia el turno a 1 o 2
+        console.log("Nuevo turno:", turnoActivo);
+        // Emitir el nuevo turno a todos los jugadores en la sala
+        io.emit("actualizarTurno", { turnoActivo });  // Notificamos a todos los jugadores el cambio de turno
+    });
 });
-//                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+
+//SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
 app.get('/', function (req, res) {
     res.status(200).send({
         message: 'GET Home route working fine!'
