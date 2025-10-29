@@ -50,16 +50,20 @@ export default function LoginPage() {
             const result = await res.json();
             setMensaje(result.mensaje);
 
+
             console.log(result)
             console.log(result.userHost)
             if (result.ok) {
+                if (result.partida_id) { // 👈 Verificar que exista
+                    localStorage.setItem("partida_id", result.partida_id);
+                    console.log("partida_id guardado:", result.partida_id);
+                }
+
                 if (result.esperando) {
 
                 } else {
                     router.push(`/${result.nombreCategoria}`);
                 }
-            } else {
-                setMensaje("Hubo un problema al crear la partida.");
             }
         } catch (error) {
             console.error(error);
@@ -76,6 +80,10 @@ export default function LoginPage() {
                 console.log("Evento recibido:", data);
 
                 if (data.ok && !data.esperando) {
+                    if (data.partida_id) {
+                        localStorage.setItem("partida_id", data.partida_id);
+                        console.log("partida_id guardado desde socket:", data.partida_id);
+                    }
                     setMensaje("¡La partida ha comenzado!");
                     router.push(`/${data.nombreCategoria}`);
                 } else if (data.esperando) {
@@ -90,7 +98,7 @@ export default function LoginPage() {
         }
     }, [socket, router]);
 
-    
+
     const irFamosos = () => {
         manejarSeleccionCategoria(2);
         socket.emit("joinRoom", { room: "famosos" });

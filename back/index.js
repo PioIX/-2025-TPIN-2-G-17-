@@ -627,7 +627,7 @@ app.post('/cartarandom', async function (req, res) {
 
             io.to(jugador1_id.toString()).emit("mostrarCarta", { carta: personajesJugador1[0] });
             io.to(jugador2_id.toString()).emit("mostrarCarta", { carta: personajesJugador2[0] });
-            
+
         } else {
             res.send({ agregado: false, mensaje: "Ya existe ese usuario" });
         }
@@ -695,32 +695,44 @@ app.post('/crearPartida', async (req, res) => {
             const jugador2_id = oponente[0].ID;
 
             const personajesJugador1 = await realizarQuery(`
-                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
-            `);
+        SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+    `);
             const personajesJugador2 = await realizarQuery(`
-                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
-            `);
+        SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
+    `);
 
             const personajeJugador1_id = personajesJugador1[0].ID;
             const personajeJugador2_id = personajesJugador2[0].ID;
 
-            await realizarQuery(`
-                INSERT INTO Partidas (jugador1_id, jugador2_id, personaje_jugador1_id, personaje_jugador2_id, estado)
-                VALUES (${jugador1_id}, ${jugador2_id}, ${personajeJugador1_id}, ${personajeJugador2_id}, 'en curso')
-            `);
+            // 👇 CAPTURAR EL RESULTADO DEL INSERT
+            const resultadoInsert = await realizarQuery(`
+        INSERT INTO Partidas (jugador1_id, jugador2_id, personaje_jugador1_id, personaje_jugador2_id, estado)
+        VALUES (${jugador1_id}, ${jugador2_id}, ${personajeJugador1_id}, ${personajeJugador2_id}, 'en curso')
+    `);
+
+            // 👇 EXTRAER EL ID DEL INSERT
+            const partida_id = resultadoInsert.insertId;
+
+            console.log("✅ Partida creada con ID:", partida_id);
 
             await realizarQuery(`
-                UPDATE Usuarios SET esperando_categoria = NULL WHERE ID IN (${jugador1_id}, ${jugador2_id})
-            `);
+        UPDATE Usuarios SET esperando_categoria = NULL WHERE ID IN (${jugador1_id}, ${jugador2_id})
+    `);
 
             io.emit("partidaCreada", {
                 ok: true,
                 mensaje: "Partida creada con éxito",
                 nombreCategoria,
                 userHost: jugador1_id,
+                partida_id: partida_id, // 👈 Ahora es un número
             });
 
-            return res.send({ ok: true, mensaje: "Partida creada con éxito", nombreCategoria });
+            return res.send({
+                ok: true,
+                mensaje: "Partida creada con éxito",
+                nombreCategoria,
+                partida_id: partida_id // 👈 También en la respuesta HTTP
+            });
 
         } else {
             await realizarQuery(`
@@ -732,7 +744,8 @@ app.post('/crearPartida', async (req, res) => {
                 mensaje: "Esperando oponente...",
                 esperando: true,
                 userHost: jugador1_id,
-                nombreCategoria
+                nombreCategoria,
+                partida_id,
             });
 
             return res.send({ ok: true, mensaje: "Esperando oponente...", esperando: true, nombreCategoria });
@@ -761,24 +774,58 @@ app.post("/arriesgar", async (req, res) => {
             ? partida.personaje_jugador2_id
             : partida.personaje_jugador1_id;
 
+
+        const id_oponente = esJugador1 ? partida.jugador2_id : partida.jugador1_id;
+
         const [personajeOponente] = await realizarQuery(`SELECT * FROM Personajes WHERE ID = ${personajeOponenteId}`);
         if (!personajeOponente) return res.send({ ok: false, mensaje: "No se encontró el personaje del oponente" });
 
         if (nombre_arriesgado.trim().toLowerCase() === personajeOponente.nombre.trim().toLowerCase()) {
+
             await realizarQuery(`
-            UPDATE Partidas
-            SET ganador_id = ${id_jugador}, estado = 'finalizada'
-            WHERE ID = ${id_partida};
-    `);
-            return res.send({ ok: true, gano: true, personajeCorrecto: personajeOponente.nombre });
+                UPDATE Partidas
+                SET ganador_id = ${id_jugador}, estado = 'finalizada'
+                WHERE ID = ${id_partida};
+            `);
+
+            io.emit("partidaFinalizada", {
+                id_partida,
+                ganador_id: id_jugador,
+                perdedor_id: id_oponente,
+                personajeCorrecto: personajeOponente.nombre,
+                mensaje: "¡La partida ha finalizado!"
+            });
+
+            return res.send({ 
+                ok: true, 
+                gano: true, 
+                personajeCorrecto: personajeOponente.nombre, 
+                id_partida, 
+                id_jugador 
+            });
         } else {
             const ganador = esJugador1 ? partida.jugador2_id : partida.jugador1_id;
             await realizarQuery(`
-            UPDATE Partidas
-            SET ganador_id = ${ganador}, estado = 'finalizada'
-            WHERE ID = ${id_partida};
-    `);
-            return res.send({ ok: true, gano: false, personajeCorrecto: personajeOponente.nombre });
+                UPDATE Partidas
+                SET ganador_id = ${ganador}, estado = 'finalizada'
+                WHERE ID = ${id_partida};
+            `);
+
+            io.emit("partidaFinalizada", {
+                id_partida,
+                ganador_id: ganador,
+                perdedor_id: id_jugador,
+                personajeCorrecto: personajeOponente.nombre,
+                mensaje: "¡La partida ha finalizado!"
+            });
+
+            return res.send({ 
+                ok: true, 
+                gano: false, 
+                personajeCorrecto: personajeOponente.nombre, 
+                id_partida, 
+                id_jugador 
+            });
         }
 
     } catch (err) {

@@ -96,14 +96,23 @@ export default function Tablero() {
             return;
         }
 
+        const jugadorId = localStorage.getItem("ID");
+
         setLoading(true);
+        const partida_id = localStorage.getItem("partida_id");
+        console.log("esta es la partida en curso: ", partida_id)
+
+        console.log("🔍 partida_id desde localStorage:", partida_id);
+        console.log("🔍 miJugadorId:", jugadorId);
+        console.log("🔍 nombreArriesgado:", nombreArriesgado);
+        console.log("🔍 Todo el localStorage:", localStorage);
 
         try {
             const res = await fetch("http://localhost:4000/arriesgar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    id_partida: partida.ID,
+                    id_partida: partida_id,
                     id_jugador: jugadorId,
                     nombre_arriesgado: nombreArriesgado
                 }),
@@ -130,7 +139,40 @@ export default function Tablero() {
         setLoading(false);
     }
 
+    useEffect(() => {
+        console.log("🔍 Verificando localStorage al cargar página:");
+        console.log("partida_id:", localStorage.getItem("partida_id"));
+        console.log("ID:", localStorage.getItem("ID"));
+        console.log("room:", localStorage.getItem("room"));
 
+        const partidaId = localStorage.getItem("partida_id");
+        if (!partidaId) {
+            console.error("No hay partida_id en localStorage!");
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on("partidaFinalizada", (data) => {
+            console.log("📥 Partida finalizada:", data);
+
+            const miId = Number(localStorage.getItem("ID"));
+
+            if (data.ganador_id === miId) {
+                alert(`¡Ganaste! El personaje correcto era ${data.personajeCorrecto}.`);
+            } else if (data.perdedor_id === miId) {
+                alert(`Perdiste. El personaje correcto era ${data.personajeCorrecto}.`);
+            }
+
+            localStorage.removeItem("partida_id");
+            localStorage.removeItem("room");
+            router.push("/inicio");
+        });
+
+        return () => {
+            socket.off("partidaFinalizada");
+        };
+    }, [socket, router]);
 
     function checkeado(event) {
         const value = event.target.value;
