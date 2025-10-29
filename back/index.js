@@ -91,6 +91,11 @@ io.on("connection", (socket) => {
         socket.to(room).emit("updateColor", { color });
     });
 
+    socket.on('turnoCambio', (nuevoTurno) => {
+        io.to(room).emit('turnoCambio', nuevoTurno);
+    });
+
+
     socket.on("cartaRandom", ({ room, carta, carta2 }) => {
         if (!carta || !carta2) {
             console.error("Una de las cartas es undefined:", carta, carta2);
@@ -783,3 +788,4 @@ app.post("/arriesgar", async (req, res) => {
         res.status(500).send({ ok: false, msg: "Error en el servidor" });
     }
 });
+

@@ -26,6 +26,8 @@ export default function Tablero() {
     const [descartadas, setDescartadas] = useState([]);
     const [cartaAsignada, setCartaAsignada] = useState([]);
     const [cartaAsignada2, setCartaAsignada2] = useState([]);
+    const [turno, setTurno] = useState("jugador1");  // Define cuál jugador tiene el turno
+
 
     async function traerPersonajes() {
         try {
@@ -70,6 +72,24 @@ export default function Tablero() {
             setMensajes((prev) => [...prev, data]);
         });
     }, [socket]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on("turnoCambio", (nuevoTurno) => {
+            console.log("El turno ha cambiado:", nuevoTurno);
+            setTurno(nuevoTurno);  // Cambiar el turno del jugador
+        });
+
+        return () => socket.off("turnoCambio");
+    }, [socket]);
+
+    const cambiarTurno = () => {
+        const nuevoTurno = turno === "jugador1" ? "jugador2" : "jugador1";
+        socket.emit("turnoCambio", nuevoTurno);  // Emite el cambio de turno al servidor
+        setTurno(nuevoTurno); // Actualiza el estado local
+    };
+
 
 
     function sendMessage() {
@@ -266,8 +286,8 @@ export default function Tablero() {
                 <header>
                     <Title texto={"¿Quién es quién?"} />
                 </header>
-
             </div>
+
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (
                     <Mensajes
@@ -275,9 +295,9 @@ export default function Tablero() {
                         texto={m.message?.message || m.message}
                         color={m.color || "mensaje"}
                     />
-
                 ))}
             </div>
+
             <div className={styles.juego}>
                 {personajes.map((p) => (
                     <BotonImagen
@@ -289,17 +309,62 @@ export default function Tablero() {
                     />
                 ))}
             </div>
+
+            {/* Aquí es donde se gestionan los botones */}
             <div className={styles.botonesRespuestas}>
-                <Input placeholder={"Hace una pregunta"} color={"registro"} onChange={(e) => setMessage(e.target.value)}></Input>
-                <Boton color={"wpp"} texto={"Preguntar"} onClick={sendMessage}></Boton>
-            </div>
-            <div className={styles.botonesRespuestas}>
-                <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado} />
-                <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado} />
+                {turno === "jugador1" ? (
+                    <>
+                        {/* Si es el turno de jugador1, solo mostrar input de pregunta */}
+                        <Input
+                            placeholder={"Hace una pregunta"}
+                            color={"registro"}
+                            onChange={(e) => setMessage(e.target.value)}
+                        />
+                        <Boton
+                            color={"wpp"}
+                            texto={"Preguntar"}
+                            onClick={() => {
+                                sendMessage(); // Enviar el mensaje
+                                cambiarTurno(); // Cambiar el turno a jugador2 después de preguntar
+                            }}
+                        />
+                    </>
+                ) : turno === "jugador2" ? (
+                    <>
+                        {/* Si es el turno de jugador2, solo mostrar botones de respuesta */}
+                        <Boton
+                            color={"si"}
+                            value={"si"}
+                            texto={"Sí"}
+                            onClick={(e) => {
+                                checkeado(e);
+                                cambiarTurno(); // Cambiar el turno a jugador1 después de responder
+                            }}
+                        />
+                        <Boton
+                            color={"no"}
+                            value={"no"}
+                            texto={"No"}
+                            onClick={(e) => {
+                                checkeado(e);
+                                cambiarTurno(); // Cambiar el turno a jugador1 después de responder
+                            }}
+                        />
+                    </>
+                ) : null}
             </div>
 
-            <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
-            <Boton onClick={arriesgar} color="arriesgar">texto={"Arriesgar"}</Boton>
+            {/* Input de arriesgar, visible para ambos jugadores */}
+            <Input
+                type="text"
+                placeholder="Arriesgar"
+                id="arriesgar"
+                color="registro"
+                onChange={(e) => setNombreArriesgado(e.target.value)}
+            />
+            <Boton onClick={arriesgar} color="arriesgar">
+                Texto={"Arriesgar"}
+            </Boton>
 
             <div className={styles.carta}>
                 <h2>Tu carta:</h2>
@@ -320,5 +385,6 @@ export default function Tablero() {
                 </footer>
             </div>
         </>
-    )
+    );
+
 }
