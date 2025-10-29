@@ -82,15 +82,14 @@ io.on("connection", (socket) => {
         io.to(room).emit('newMessage', { room, message });
     });
 
-    socket.on('disconnect', () => {
-        console.log("Disconnect");
-    })
-
+    
+    
+    
     socket.on("colorChange", ({ room, color }) => {
         console.log(`🎨 Cambio de color en ${room}: ${color}`);
         socket.to(room).emit("updateColor", { color });
     });
-
+    
     socket.on("cartaRandom", ({ room, carta, carta2 }) => {
         if (!carta || !carta2) {
             console.error("Una de las cartas es undefined:", carta, carta2);
@@ -102,19 +101,19 @@ io.on("connection", (socket) => {
 
         // Enviar la carta al host
         socket.emit("tu carta", { carta });
-
+        
         // Enviar la carta al oponente
         socket.to(room).emit("carta del oponente", { carta2 });
     });
-
+    
     socket.on("comenzarRonda", (roomId, personajes) => {
         const jugadoresEnSala = getJugadoresPorSala(roomId);
-
+        
         if (!Array.isArray(personajes)) {
             console.error("Personajes no es un array:", personajes);
             return;
         }
-
+        
         let cartasDisponibles = [...personajes];  // Los personajes vienen del frontend
         socket.to(room).emit("cartaAsignada", { color });
         jugadoresEnSala.forEach(jugador => {
@@ -124,6 +123,15 @@ io.on("connection", (socket) => {
         });
     });
 
+    socket.on("finalizarPartida", data => {
+        console.log(data)
+    })
+
+    socket.on("disconnect", data => {
+        console.log(data)
+        io.to(req.session.room).emit("rendirse", {mensaje: "Se desconecto el rival"})
+    })
+    
 });
 //                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
 app.get('/', function (req, res) {

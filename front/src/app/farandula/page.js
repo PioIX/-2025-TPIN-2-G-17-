@@ -26,6 +26,7 @@ export default function Tablero() {
     const [descartadas, setDescartadas] = useState([]);
     const [cartaAsignada, setCartaAsignada] = useState([]);
     const [cartaAsignada2, setCartaAsignada2] = useState([]);
+    const [contador, setContador] = useState(0)
 
     async function traerPersonajes() {
         try {
@@ -69,8 +70,43 @@ export default function Tablero() {
             console.log("📩 Nuevo mensaje:", data);
             setMensajes((prev) => [...prev, data]);
         });
+
+        /*
+        socket.on("rendirse", data => {
+            let contadorTemp = contador+1
+            setContador(contadorTemp)
+        })
+            */
     }, [socket]);
 
+    
+  /*  useEffect(() => {
+        const unloadCallback = (event) => {
+            console.log("Unload Event")
+            event.preventDefault();
+            event.returnValue = "";
+            return "";
+        };
+        
+        window.addEventListener("beforeunload", unloadCallback);
+        return () => {
+            window.addEventListener("popstate", confirm("Seguro"));
+            window.removeEventListener("beforeunload", unloadCallback);
+        }
+    }, []);*/
+
+    useEffect(() => {
+        if (!socket) return
+
+        if (contador == 2) {
+                alert("Se rindioooo" + data.mensaje)
+                socket.emit("finalizarPartida", {
+                    id_partida: localStorage.getItem("partida_id"),
+                    id_jugador: localStorage.getItem("ID")
+                })
+                setContador(0)
+        }
+    }, [contador])
 
     function sendMessage() {
         const room = localStorage.getItem("room");
@@ -334,8 +370,8 @@ export default function Tablero() {
                 <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado} />
             </div>
 
-            <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
-            <Boton onClick={arriesgar} color="arriesgar">texto={"Arriesgar"}</Boton>
+            <Input type="text" placeholder="Nombre del personaje" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
+            <Boton color={"wpp"} texto={"Arriesgar"} onClick={arriesgar}></Boton>
 
             <div className={styles.carta}>
                 {cartaAsignada.map((p) => (
