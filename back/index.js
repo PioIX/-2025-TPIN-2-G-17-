@@ -109,10 +109,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("finalizarTurno", (data) => {
-       
-    io.to(req.session.room).emit("startTurno", {room: data.room, msg: "Empieza turno" })
-
-
+        io.to(req.session.room).emit("startTurno", {room: data.room, msg: "Empieza turno" })
     });
 
     socket.on("ordenJugadores", data => {

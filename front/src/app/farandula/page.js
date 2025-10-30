@@ -78,7 +78,6 @@ export default function Tablero() {
             console.log("📩 Nuevo mensaje:", data);
             setMensajes((prev) => [...prev, data]);
         });
-
         socket.on("joinedPlayer", (data) => {
             if (localStorage.getItem("ID") != data.idUser) {
                 if (data.idUser != undefined && data.idUser != 0) {
@@ -103,10 +102,7 @@ export default function Tablero() {
 
     }, [socket]);
 
-
-
     useEffect(() => {
-
         if (onOffTimer) {
             const timer = setInterval(() => {
                 setSegundos(prev => {
@@ -118,17 +114,12 @@ export default function Tablero() {
                     return prev - 1;  // Resta un segundo
                 });
             }, 1000);
-
             setTimer(timer) // para apagarlo despues cuando termina el turno
         }
-
-
         return (() => {
             clearInterval(timer)
         })
-
     }, [onOffTimer])
-
 
     function sendMessage() {
         const room = localStorage.getItem("room");
@@ -212,9 +203,9 @@ export default function Tablero() {
 
         const room = localStorage.getItem("room");
         socket.emit("colorChange", { room, color: nuevoColor });
+    }
 
-
-
+    function timerpene() {
         // si aca termina el turno, apago timer y apago
         setOnOffTimer(false);
         clearInterval(timer);
@@ -237,32 +228,6 @@ export default function Tablero() {
     }, [socket]);
 
     // carta random
-    /*
-
-    useEffect(() => {
-        // Asegúrate de que socket esté disponible y la sala exista
-        const room = localStorage.getItem("room");
-        const personajes = JSON.parse(localStorage.getItem("personajesFarandula"));
-        if (room && socket) {
-            console.log("Personajes:", personajes);  // Verifica que sea un array
-            socket.emit("comenzarRonda", room, personajes);  // Emitir el evento al backend
-        }
-    }, [socket]);  // Solo se ejecuta cuando el socket está disponible
-
-
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.on("cartaAsignada", (carta) => {
-            console.log("Tu carta asignada es:", carta);  // Verifica que la carta se reciba correctamente
-            setCartaAsignada(carta);  // Asigna la carta al jugador
-        });
-
-        return () => {
-            socket.off("cartaAsignada");  // Limpiar el evento cuando el componente se desmonte
-        };
-    }, [socket]);
-    */
     useEffect(() => {
         // Asegúrate de que socket esté disponible y la sala exista
         const room = localStorage.getItem("room");
@@ -320,7 +285,7 @@ export default function Tablero() {
         }
     }
 
-    //temporizador (lo hizo chatg)
+    //temporizador
     useEffect(() => {
         if (jugadorActivo < 1) return;
         console.log("el jugador activo es: ", jugadorActivo);
@@ -379,6 +344,8 @@ export default function Tablero() {
                 {/*Agregar mensaje para si es mi turno o del rival, no por el id */}
                 <h1>Turno del Jugador {turno}</h1>
                 <p>Tiempo restante: {segundos} segundos</p>
+                <p>timer: {timer}</p>
+                <Boton color={"no"} value={"no"} texto={"No"} onClick={timerpene} />
                 {/* Aquí va el resto de tu juego */}
             </div>
             <div className={styles.chatBox}>
@@ -409,6 +376,7 @@ export default function Tablero() {
             <div className={styles.botonesRespuestas}>
                 <Boton color={"si"} value={"si"} texto={"Sí"} onClick={checkeado} />
                 <Boton color={"no"} value={"no"} texto={"No"} onClick={checkeado} />
+                
             </div>
 
             <Input type="text" placeholder="Arriesgar" id="arriesgar" color="registro" onChange={(e) => setNombreArriesgado(e.target.value)}></Input>
