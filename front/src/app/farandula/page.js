@@ -37,6 +37,30 @@ export default function Tablero() {
 
 
 
+    const [segundos, setSegundos] = useState(60);
+    const [turno, setTurno] = useState(1);  // Supongo que aquí gestionas el turno
+    const [jugadorActivo, setJugadorActivo] = useState(true);
+
+    //timer
+    useEffect(() => {
+        if (!socket) return;
+
+        // Escuchar evento para actualizar el temporizador
+        socket.on('actualizarTemporizador', (data) => {
+            setSegundos(data.timer);  // Actualiza el temporizador en pantalla
+        });
+
+        // Limpiar el evento cuando el componente se desmonte
+        return () => socket.off('actualizarTemporizador');
+    }, [socket]);
+
+    // Función que se llama cuando el jugador presiona el botón para reiniciar el temporizador
+    const reiniciarTemporizador = () => {
+        const room = localStorage.getItem("room");  // Asumiendo que usas rooms
+        socket.emit('reiniciarTemporizador', { room });  // Enviar evento al backend
+    };
+
+
     async function traerPersonajes() {
         try {
             const response = await fetch("http://localhost:4000/farandula", {
@@ -401,9 +425,6 @@ export default function Tablero() {
         }
     }
 
-
-
-
     return (
         <>
             <div className={styles.header}>
@@ -412,6 +433,10 @@ export default function Tablero() {
                 </header>
             </div>
 
+            <div className={styles.tcontainer}>
+                <div className={styles.temporizador}>{segundos}</div>
+                <button onClick={reiniciarTemporizador}>Reiniciar Temporizador</button>
+            </div>
 
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (
