@@ -67,7 +67,55 @@ io.on("connection", (socket) => {
         socket.join(data.room);
 
         io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: data.room });
+
+        socket.on("user_navigated_back", async ({ partida_id, jugador_id }) => {
+            console.log(`🛑 Jugador ${jugador_id} abandonó la partida ${partida_id}`);
+
+            try {
+                // 🔹 Actualizar el estado de la partida en la base de datos
+                await realizarQuery(`
+            UPDATE Partidas 
+            SET estado = 'finalizada' 
+            WHERE id = ${partida_id}
+        `);
+
+                // 🔹 Avisar al otro jugador de la sala
+                const room = req.session?.room;
+                if (room) {
+                    socket.to(room).emit("partida_finalizada", {
+                        mensaje: "El oponente abandonó la partida.",
+                    });
+                }
+            } catch (error) {
+                console.error("❌ Error al finalizar la partida:", error);
+            }
+        });
+        /*
+        socket.on("user_navigated_back", async ({ partida_id, jugador_id }) => {
+            console.log(`🛑 Jugador ${jugador_id} abandonó la partida ${partida_id}`);
+
+            try {
+                // Actualizar el estado en la BD
+                await realizarQuery(`
+                UPDATE Partidas 
+                SET estado = 'finalizada' 
+                WHERE id = ${partida_id}
+            `);
+
+                // Avisar al oponente
+                const room = req.session?.room;
+                if (room) {
+                    socket.to(room).emit("partida_finalizada", {
+                        mensaje: "El oponente abandonó la partida.",
+                    });
+                }
+            } catch (error) {
+                console.error("❌ Error al finalizar la partida:", error);
+            }
+        });
+        */
     });
+
 
     socket.on('pingAll', data => {
         console.log("PING ALL: ", data);
@@ -82,14 +130,14 @@ io.on("connection", (socket) => {
         io.to(room).emit('newMessage', { room, message });
     });
 
-    
-    
-    
+
+
+
     socket.on("colorChange", ({ room, color }) => {
         console.log(`🎨 Cambio de color en ${room}: ${color}`);
         socket.to(room).emit("updateColor", { color });
     });
-    
+
     socket.on("cartaRandom", ({ room, carta, carta2 }) => {
         if (!carta || !carta2) {
             console.error("Una de las cartas es undefined:", carta, carta2);
@@ -101,19 +149,19 @@ io.on("connection", (socket) => {
 
         // Enviar la carta al host
         socket.emit("tu carta", { carta });
-        
+
         // Enviar la carta al oponente
         socket.to(room).emit("carta del oponente", { carta2 });
     });
-    
+
     socket.on("comenzarRonda", (roomId, personajes) => {
         const jugadoresEnSala = getJugadoresPorSala(roomId);
-        
+
         if (!Array.isArray(personajes)) {
             console.error("Personajes no es un array:", personajes);
             return;
         }
-        
+
         let cartasDisponibles = [...personajes];  // Los personajes vienen del frontend
         socket.to(room).emit("cartaAsignada", { color });
         jugadoresEnSala.forEach(jugador => {
@@ -129,9 +177,9 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", data => {
         console.log(data)
-        io.to(req.session.room).emit("rendirse", {mensaje: "Se desconecto el rival"})
+        io.to(req.session.room).emit("rendirse", { mensaje: "Se desconecto el rival" })
     })
-    
+
 });
 //                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
 app.get('/', function (req, res) {
@@ -766,8 +814,6 @@ app.post('/crearPartida', async (req, res) => {
 });
 
 
-
-
 //arriesgar personaje
 
 app.post("/arriesgar", async (req, res) => {
@@ -804,12 +850,12 @@ app.post("/arriesgar", async (req, res) => {
                 mensaje: "¡La partida ha finalizado!"
             });
 
-            return res.send({ 
-                ok: true, 
-                gano: true, 
-                personajeCorrecto: personajeOponente.nombre, 
-                id_partida, 
-                id_jugador 
+            return res.send({
+                ok: true,
+                gano: true,
+                personajeCorrecto: personajeOponente.nombre,
+                id_partida,
+                id_jugador
             });
         } else {
             const ganador = esJugador1 ? partida.jugador2_id : partida.jugador1_id;
@@ -827,12 +873,12 @@ app.post("/arriesgar", async (req, res) => {
                 mensaje: "¡La partida ha finalizado!"
             });
 
-            return res.send({ 
-                ok: true, 
-                gano: false, 
-                personajeCorrecto: personajeOponente.nombre, 
-                id_partida, 
-                id_jugador 
+            return res.send({
+                ok: true,
+                gano: false,
+                personajeCorrecto: personajeOponente.nombre,
+                id_partida,
+                id_jugador
             });
         }
 

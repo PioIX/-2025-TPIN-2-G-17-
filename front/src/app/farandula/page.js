@@ -79,32 +79,32 @@ export default function Tablero() {
             */
     }, [socket]);
 
-    
-  /*  useEffect(() => {
-        const unloadCallback = (event) => {
-            console.log("Unload Event")
-            event.preventDefault();
-            event.returnValue = "";
-            return "";
-        };
-        
-        window.addEventListener("beforeunload", unloadCallback);
-        return () => {
-            window.addEventListener("popstate", confirm("Seguro"));
-            window.removeEventListener("beforeunload", unloadCallback);
-        }
-    }, []);*/
+
+    /*  useEffect(() => {
+          const unloadCallback = (event) => {
+              console.log("Unload Event")
+              event.preventDefault();
+              event.returnValue = "";
+              return "";
+          };
+          
+          window.addEventListener("beforeunload", unloadCallback);
+          return () => {
+              window.addEventListener("popstate", confirm("Seguro"));
+              window.removeEventListener("beforeunload", unloadCallback);
+          }
+      }, []);*/
 
     useEffect(() => {
         if (!socket) return
 
         if (contador == 2) {
-                alert("Se rindioooo" + data.mensaje)
-                socket.emit("finalizarPartida", {
-                    id_partida: localStorage.getItem("partida_id"),
-                    id_jugador: localStorage.getItem("ID")
-                })
-                setContador(0)
+            alert("Se rindioooo" + data.mensaje)
+            socket.emit("finalizarPartida", {
+                id_partida: localStorage.getItem("partida_id"),
+                id_jugador: localStorage.getItem("ID")
+            })
+            setContador(0)
         }
     }, [contador])
 
@@ -124,7 +124,45 @@ export default function Tablero() {
         }
     }, [socket])
 
+    /*
+    useEffect(() => {
+        if (!socket) {
+            console.log("El socket no está inicializado todavía");
+            return;
+        }
 
+        const handleRouteChange = () => {
+            socket.emit("user_navigated_back", {
+                partida_id: localStorage.getItem("partida_id"),
+                jugador_id: localStorage.getItem("ID")
+            });
+        };
+
+        window.addEventListener("popstate", handleRouteChange);
+
+        return () => {
+            window.removeEventListener("popstate", handleRouteChange);
+            socket.off("partida_finalizada");
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!socket) return; // 🛑 No hacer nada si el socket aún no existe
+
+        // 🧠 Escucha si el oponente abandonó la partida
+        socket.on("partida_finalizada", (data) => {
+            alert(data.mensaje);
+            localStorage.removeItem("partida_id");
+            localStorage.removeItem("room");
+            router.push("/inicio");
+        });
+
+        // 🧹 Limpiar el listener cuando el componente se desmonte
+        return () => {
+            socket.off("partida_finalizada");
+        };
+    }, [socket, router]); // <- importante incluir dependencias
+    */
 
     async function arriesgar() {
         if (nombreArriesgado.trim() === "") {
@@ -274,6 +312,7 @@ export default function Tablero() {
         };
     }, [socket]);
     */
+
     useEffect(() => {
         // Asegúrate de que socket esté disponible y la sala exista
         const room = localStorage.getItem("room");
