@@ -1,5 +1,6 @@
 "use client"
 
+
 import Boton from "@/componentes/Boton"
 import Input from "@/componentes/Input"
 import Title from "@/componentes/Title"
@@ -9,6 +10,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation"
 import styles from "./page.module.css"
 import Mensajes from "@/componentes/Mensajes";
+
 
 export default function Tablero() {
     const router = useRouter()
@@ -27,6 +29,12 @@ export default function Tablero() {
     const [cartaAsignada, setCartaAsignada] = useState([]);
     const [cartaAsignada2, setCartaAsignada2] = useState([]);
     const [turno, setTurno] = useState("jugador1");  // Define cuál jugador tiene el turno
+    const [idPropio, setIdPropio] = useState();
+    const [idRival, setIdRival] = useState();
+    const [flagYaEnvie, setFlagYaEnvie] = useState(0);
+    const [jugador, setJugador] = useState(""); //Esto es para saber que jugador soy, asi cuando es mi turno juego yo
+
+
 
 
     async function traerPersonajes() {
@@ -37,6 +45,8 @@ export default function Tablero() {
             });
             const data = await response.json();
             console.log("Data recibida del backend:", data);
+
+
 
 
             if (data.ok && data.personajes) {
@@ -51,6 +61,7 @@ export default function Tablero() {
         }
     }
 
+
     function handleClick(id) {
         setDescartadas((prev) => {
             const updated = prev.includes(id) ? prev : [...prev, id];
@@ -59,36 +70,91 @@ export default function Tablero() {
         });
     }
 
+
     useEffect(() => {
         traerPersonajes();
         traerCarta();
     }, []);
 
+
+    useEffect(()=>{
+        //ESTAMOS ACA
+        let id = localStorage.getItem('ID');
+        setIdPropio(id)
+        console.log("Soy: ", id)
+        if (!socket) return;
+        const room = localStorage.getItem("room");
+        socket.emit("idJugadores", {room, id, idRival});
+    }, [socket, isConnected])
+
+
     useEffect(() => {
         if (!socket) return;
+
 
         socket.on("newMessage", (data) => {
             console.log("📩 Nuevo mensaje:", data);
             setMensajes((prev) => [...prev, data]);
         });
+
+
+        socket.on("idRival", (data) => {
+            console.log("Data: ", data, " IdPropio: " , idPropio)
+            if (data.id != idPropio) {
+                console.log("📩 Id rival:", data);
+                setIdRival(data.id)
+            }
+            /*if (data.idRival == undefined) {
+                const room = localStorage.getItem("room");
+                socket.emit("idJugadores", {room, idPropio, idRival});
+            }*/
+        });
     }, [socket]);
+
+
+    useEffect(()=>{
+        if (idPropio && idRival) {
+            console.log("Los ids existen: ", idPropio, " y ", idRival)
+            if (idPropio > idRival) {
+                setJugador("jugador2")                
+            }
+            else{
+                setJugador("jugador1")
+            }
+            if (flagYaEnvie == 0) {
+                setFlagYaEnvie(1)
+                const room = localStorage.getItem("room");
+                let id = localStorage.getItem('ID');
+                console.log("Enviando id del primero q entro")
+                socket.emit("idJugadores", {room, id, idRival});
+            }
+        }
+    }, [idPropio, idRival])
+
 
     useEffect(() => {
         if (!socket) return;
 
-        socket.on("turnoCambio", (nuevoTurno) => {
+
+        socket.on("cambiarTurno", (nuevoTurno) => {
             console.log("El turno ha cambiado:", nuevoTurno);
-            setTurno(nuevoTurno);  // Cambiar el turno del jugador
+            setTurno( nuevoTurno);  // Cambiar el turno del jugador
         });
+
 
         return () => socket.off("turnoCambio");
     }, [socket]);
 
+
     const cambiarTurno = () => {
+        const room = localStorage.getItem("room");
         const nuevoTurno = turno === "jugador1" ? "jugador2" : "jugador1";
-        socket.emit("turnoCambio", nuevoTurno);  // Emite el cambio de turno al servidor
+        socket.emit("turnoCambio", {room, nuevoTurno});  // Emite el cambio de turno al servidor
         setTurno(nuevoTurno); // Actualiza el estado local
     };
+
+
+
 
 
 
@@ -100,6 +166,7 @@ export default function Tablero() {
         console.log("Mensaje enviado:", nuevo);
     }
 
+
     useEffect(() => {
         if (!socket) return;
         let room = localStorage.getItem("room")
@@ -110,6 +177,9 @@ export default function Tablero() {
 
 
 
+
+
+
     async function arriesgar() {
         // Verificación de que el nombre no esté vacío
         if (nombreArriesgado.trim() === "") {
@@ -117,7 +187,9 @@ export default function Tablero() {
             return;
         }
 
+
         setLoading(true);  // Inicia el estado de carga
+
 
         try {
             const res = await fetch("http://localhost:4000/arriesgar", {
@@ -130,11 +202,14 @@ export default function Tablero() {
                 }),
             });
 
+
             // Parsear la respuesta a JSON
             const result = await res.json();
 
+
             // Actualizar el mensaje en el estado
             setMensaje(result.msg);
+
 
             if (result.ok) {
                 if (result.ganador) {
@@ -142,6 +217,7 @@ export default function Tablero() {
                 } else {
                     setMensaje(`Perdiste. El personaje correcto era ${result.personajeCorrecto}.`);
                 }
+
 
                 // Si el jugador ganó o perdió, redirigir a la página de inicio
                 router.push("/inicio");
@@ -153,8 +229,12 @@ export default function Tablero() {
             alert("Error al conectar con el servidor");
         }
 
+
         setLoading(false);
     }
+
+
+
 
 
 
@@ -162,8 +242,10 @@ export default function Tablero() {
         const value = event.target.value;
         setBool(value);
 
+
         const nuevoColor = value == "si" ? "si" : "no";
         setcolor(nuevoColor);
+
 
         setMensajes((prevMensajes) => {
             if (prevMensajes.length == 0) return prevMensajes;
@@ -174,9 +256,12 @@ export default function Tablero() {
             return nuevos;
         });
 
+
         const room = localStorage.getItem("room");
         socket.emit("colorChange", { room, color: nuevoColor });
     }
+
+
 
 
     useEffect(() => {
@@ -195,8 +280,10 @@ export default function Tablero() {
         return () => socket.off("updateColor");
     }, [socket]);
 
+
     // carta random
     /*
+
 
     useEffect(() => {
         // Asegúrate de que socket esté disponible y la sala exista
@@ -209,13 +296,17 @@ export default function Tablero() {
     }, [socket]);  // Solo se ejecuta cuando el socket está disponible
 
 
+
+
     useEffect(() => {
         if (!socket) return;
+
 
         socket.on("cartaAsignada", (carta) => {
             console.log("Tu carta asignada es:", carta);  // Verifica que la carta se reciba correctamente
             setCartaAsignada(carta);  // Asigna la carta al jugador
         });
+
 
         return () => {
             socket.off("cartaAsignada");  // Limpiar el evento cuando el componente se desmonte
@@ -232,8 +323,10 @@ export default function Tablero() {
         }
     }, [socket]);
 
+
     useEffect(() => {
         if (!socket) return;
+
 
         // Recibe la carta del host
         socket.on("tu carta", ({ carta }) => {
@@ -241,17 +334,20 @@ export default function Tablero() {
             setCartaAsignada(carta);  // Guardamos la carta del host en el estado
         });
 
+
         // Recibe la carta del oponente
         socket.on("carta del oponente", ({ carta2 }) => {
             console.log("Carta del oponente:", carta2);  // Aquí deberías ver la carta del oponente
             setCartaAsignada2(carta2);  // Guardamos la carta del oponente en el estado
         });
 
+
         return () => {
             socket.off("tu carta");
             socket.off("carta del oponente");
         };
     }, [socket]);
+
 
     async function traerCarta() {
         try {
@@ -261,6 +357,7 @@ export default function Tablero() {
             });
             const data = await response.json();
             console.log("Data recibida del backend:", data);
+
 
             if (data.ok) {
                 //localStorage.setItem("personajesFarandula", JSON.stringify(data.personajes));
@@ -280,6 +377,8 @@ export default function Tablero() {
     }
 
 
+
+
     return (
         <>
             <div className={styles.header}>
@@ -287,6 +386,7 @@ export default function Tablero() {
                     <Title texto={"¿Quién es quién?"} />
                 </header>
             </div>
+
 
             <div className={styles.chatBox}>
                 {mensajes.map((m, i) => (
@@ -297,6 +397,7 @@ export default function Tablero() {
                     />
                 ))}
             </div>
+
 
             <div className={styles.juego}>
                 {personajes.map((p) => (
@@ -310,9 +411,10 @@ export default function Tablero() {
                 ))}
             </div>
 
+
             {/* Aquí es donde se gestionan los botones */}
             <div className={styles.botonesRespuestas}>
-                {turno === "jugador1" ? (
+                {(turno === "jugador1" && jugador == "jugador1") || (turno === "jugador2" && jugador == "jugador2") ? (
                     <>
                         {/* Si es el turno de jugador1, solo mostrar input de pregunta */}
                         <Input
@@ -329,7 +431,7 @@ export default function Tablero() {
                             }}
                         />
                     </>
-                ) : turno === "jugador2" ? (
+                ) : (turno === "jugador2" && jugador == "jugador1") || (turno === "jugador1" && jugador == "jugador2") ? (
                     <>
                         {/* Si es el turno de jugador2, solo mostrar botones de respuesta */}
                         <Boton
@@ -354,6 +456,7 @@ export default function Tablero() {
                 ) : null}
             </div>
 
+
             {/* Input de arriesgar, visible para ambos jugadores */}
             <Input
                 type="text"
@@ -365,6 +468,7 @@ export default function Tablero() {
             <Boton onClick={arriesgar} color="arriesgar">
                 Texto={"Arriesgar"}
             </Boton>
+
 
             <div className={styles.carta}>
                 <h2>Tu carta:</h2>
@@ -379,6 +483,7 @@ export default function Tablero() {
                 ))}
             </div>
 
+
             <div className={styles.footer}>
                 <footer>
                     <h2>Arrufat - Gaetani - Suarez - Zuran</h2>
@@ -387,4 +492,6 @@ export default function Tablero() {
         </>
     );
 
+
 }
+

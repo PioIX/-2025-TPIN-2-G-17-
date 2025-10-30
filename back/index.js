@@ -6,23 +6,29 @@ const path = require('path');
 const { realizarQuery } = require('./modulos/mysql');
 const { Console } = require('console');
 
+
 var app = express(); //Inicializo express
 const port = process.env.PORT || 4000;                              // Puerto por el que estoy ejecutando la página Web
 
+
 // Asegurate de exponer la carpeta front para acceder a las imágenes
 app.use(express.static(path.join(__dirname, './front'))); // o './front' si estás adentro del mismo nivel
+
 
 // Convierte una petición recibida (POST-GET...) a objeto JSON
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+
 app.use(cors());
+
 
 //Pongo el servidor a escuchar
 const server = app.listen(port, function () {
     console.log(`Server running in http://localhost:${port}
         `);
 });
+
 
 const io = require('socket.io')(server, {
     cors: {
@@ -35,6 +41,9 @@ const io = require('socket.io')(server, {
 
 
 
+
+
+
 const sessionMiddleware = session({
     //Elegir tu propia key secreta
     secret: "supersarasa",
@@ -42,11 +51,14 @@ const sessionMiddleware = session({
     saveUninitialized: false
 });
 
+
 app.use(sessionMiddleware);
+
 
 io.use((socket, next) => {
     sessionMiddleware(socket.request, {}, next);
 });
+
 
 /*
     A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
@@ -54,10 +66,13 @@ io.use((socket, next) => {
     A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
 */
 
+
 let jugadores = {};
+
 
 io.on("connection", (socket) => {
     const req = socket.request;
+
 
     socket.on('joinRoom', data => {
         console.log("🚀 ~ io.on ~ req.session.room:", data.room)
@@ -66,8 +81,10 @@ io.on("connection", (socket) => {
         req.session.room = data.room;
         socket.join(data.room);
 
+
         io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: data.room });
     });
+
 
     socket.on('pingAll', data => {
         console.log("PING ALL: ", data);
@@ -82,18 +99,31 @@ io.on("connection", (socket) => {
         io.to(room).emit('newMessage', { room, message });
     });
 
+
     socket.on('disconnect', () => {
         console.log("Disconnect");
     })
+
 
     socket.on("colorChange", ({ room, color }) => {
         console.log(`🎨 Cambio de color en ${room}: ${color}`);
         socket.to(room).emit("updateColor", { color });
     });
 
-    socket.on('turnoCambio', (nuevoTurno) => {
-        io.to(room).emit('turnoCambio', nuevoTurno);
+
+    socket.on('turnoCambio', ({room, nuevoTurno}) => {
+        io.to(room).emit('cambiarTurno', nuevoTurno);
     });
+
+
+       socket.on('idJugadores', ({room, id, idRival}) => {
+        console.log({room, id, idRival})
+        io.to(room).emit('idRival', {id: id, idRival: idRival});
+    });
+
+
+
+
 
 
     socket.on("cartaRandom", ({ room, carta, carta2 }) => {
@@ -102,23 +132,29 @@ io.on("connection", (socket) => {
             return;
         }
 
+
         console.log("Carta para el host:", carta);
         console.log("Carta para el oponente:", carta2);
 
+
         // Enviar la carta al host
         socket.emit("tu carta", { carta });
+
 
         // Enviar la carta al oponente
         socket.to(room).emit("carta del oponente", { carta2 });
     });
 
+
     socket.on("comenzarRonda", (roomId, personajes) => {
         const jugadoresEnSala = getJugadoresPorSala(roomId);
+
 
         if (!Array.isArray(personajes)) {
             console.error("Personajes no es un array:", personajes);
             return;
         }
+
 
         let cartasDisponibles = [...personajes];  // Los personajes vienen del frontend
         socket.to(room).emit("cartaAsignada", { color });
@@ -129,6 +165,7 @@ io.on("connection", (socket) => {
         });
     });
 
+
 });
 //                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
 app.get('/', function (req, res) {
@@ -137,9 +174,11 @@ app.get('/', function (req, res) {
     });
 });
 
+
 function getJugadoresPorSala(roomId) {
     return jugadores[roomId] || [];
 }
+
 
 /**
  * req = request. en este objeto voy a tener todo lo que reciba del cliente
@@ -147,13 +186,16 @@ function getJugadoresPorSala(roomId) {
  */
 
 
+
+
 //login
+
 
 app.post('/login', async function (req, res) {
     console.log(req.body);
     try {
         const resultado = await realizarQuery(`
-            SELECT * FROM Usuarios 
+            SELECT * FROM Usuarios
             WHERE nombre = '${req.body.nombre}' AND contraseña = '${req.body.contraseña}'
         `);
         if (resultado.length != 0) {
@@ -166,6 +208,7 @@ app.post('/login', async function (req, res) {
             res.send({ message: "Error, no se encontró ningun usuario" })
         }
 
+
     } catch (error) {
         res.send({
             ok: false,
@@ -175,11 +218,13 @@ app.post('/login', async function (req, res) {
     }
 });
 
+
 //registro
 app.post('/registro', async function (req, res) {
     try {
         console.log(req.body)
         vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre='${req.body.nombre}'`)
+
 
         if (vector.length == 0) {
             realizarQuery(`
@@ -199,6 +244,7 @@ app.post('/registro', async function (req, res) {
     }
 })
 
+
 app.post("/chats", async function (req, res) {
     try {
         console.log(req.body)
@@ -211,6 +257,7 @@ app.post("/chats", async function (req, res) {
             AND Chats.nombre != ""
             AND (Chats.es_grupo = 1 OR Chats.es_grupo = 0)
 
+
         `);
         res.send(resultado);
     } catch (error) {
@@ -222,9 +269,11 @@ app.post("/chats", async function (req, res) {
     }
 });
 
+
 app.post("/traerUsuarios", async function (req, res) {
     try {
         console.log("BODY:", req.body);
+
 
         const resultado = await realizarQuery(`
             SELECT u.ID, u.nombre, upc.id_chat, u.foto_perfil
@@ -239,6 +288,7 @@ app.post("/traerUsuarios", async function (req, res) {
             AND (u.nombre != "" AND u.nombre IS NOT NULL)
         `);
 
+
         console.log("RESULTADO:", resultado);
         res.send(resultado);
     } catch (error) {
@@ -246,6 +296,7 @@ app.post("/traerUsuarios", async function (req, res) {
         res.send({ ok: false, mensaje: "Error en el servidor", error: error.message });
     }
 });
+
 
 //JUEGO
 app.get('/farandula', async (req, res) => {
@@ -265,6 +316,7 @@ app.get('/farandula', async (req, res) => {
             }))
         });
 
+
     } catch (error) {
         console.error("Error en la consulta:", error);
         res.status(500).json({
@@ -274,6 +326,7 @@ app.get('/farandula', async (req, res) => {
         });
     }
 });
+
 
 app.get('/famosos', async (req, res) => {
     try {
@@ -292,6 +345,7 @@ app.get('/famosos', async (req, res) => {
             }))
         });
 
+
     } catch (error) {
         console.error("Error en la consulta:", error);
         res.status(500).json({
@@ -301,6 +355,7 @@ app.get('/famosos', async (req, res) => {
         });
     }
 });
+
 
 app.get('/cantantes', async (req, res) => {
     try {
@@ -319,6 +374,7 @@ app.get('/cantantes', async (req, res) => {
             }))
         });
 
+
     } catch (error) {
         console.error("Error en la consulta:", error);
         res.status(500).json({
@@ -328,6 +384,7 @@ app.get('/cantantes', async (req, res) => {
         });
     }
 });
+
 
 app.get('/scaloneta', async (req, res) => {
     try {
@@ -346,6 +403,7 @@ app.get('/scaloneta', async (req, res) => {
             }))
         });
 
+
     } catch (error) {
         console.error("Error en la consulta:", error);
         res.status(500).json({
@@ -358,6 +416,9 @@ app.get('/scaloneta', async (req, res) => {
 
 
 
+
+
+
 app.get('/random', async (req, res) => {
     try {
         const personajesJugador1 = await realizarQuery(`
@@ -366,6 +427,7 @@ app.get('/random', async (req, res) => {
         const personajesJugador2 = await realizarQuery(`
                 SELECT * FROM Personajes WHERE categoria_id = 1 ORDER BY RAND() LIMIT 1
             `);
+
 
         console.log("carta:", personajesJugador1);
         console.log("carta:", personajesJugador2);
@@ -386,6 +448,7 @@ app.get('/random', async (req, res) => {
             }))
         });
 
+
     } catch (error) {
         console.error("Error en la consulta:", error);
         res.status(500).json({
@@ -396,28 +459,33 @@ app.get('/random', async (req, res) => {
     }
 });
 
+
 //agregar chats
 app.post("/agregarChat", async function (req, res) {
     try {
         let chatId;
 
+
         if (req.body.es_grupo == 1) {
             const nombre = req.body.nombre ?? "Grupo sin nombre";
             // Insertar el grupo
             const resultado = await realizarQuery(`
-        
+       
                 INSERT INTO Chats (es_grupo, foto, nombre, descripcion_grupo)
                 VALUES (1, '${req.body.foto}', '${req.body.nombre}', '${req.body.descripcion_grupo}')
             `);
 
+
             chatId = resultado.insertId;
+
 
             // Insertar al creador del grupo
             await realizarQuery(`
-        
+       
             INSERT INTO UsuariosPorChat (id_chat, id_usuario)
             VALUES (${chatId}, ${req.body.id_usuario})
             `);
+
 
             // Insertar a los demás usuarios por mail
             for (const mail of req.body.mails) {
@@ -433,7 +501,9 @@ app.post("/agregarChat", async function (req, res) {
                 }
             }
 
+
             console.log(chatId)
+
 
         } else {
             // Insertar chat individual (campos vacíos salvo es_grupo = 0)
@@ -443,11 +513,13 @@ app.post("/agregarChat", async function (req, res) {
       `);
             chatId = resultado.insertId;
 
+
             // obtener id del otro usuario por mail
             const usuarios = await realizarQuery(`
         SELECT ID FROM Usuarios WHERE usuario_mail = '${req.body.mail}'
       `);
             const otroUsuarioId = usuarios[0].ID;
+
 
             // vincular usuarios al chat
             await realizarQuery(`
@@ -455,6 +527,7 @@ app.post("/agregarChat", async function (req, res) {
         VALUES (${chatId}, ${req.body.id_usuario}), (${chatId}, ${otroUsuarioId})
       `);
         }
+
 
         res.send({ ok: true, id_chat: chatId });
     } catch (error) {
@@ -466,6 +539,7 @@ app.post("/agregarChat", async function (req, res) {
     }
 });
 
+
 //traer contactos
 app.post('/contacto', async (req, res) => {
     try {
@@ -475,12 +549,15 @@ app.post('/contacto', async (req, res) => {
             INNER JOIN UsuariosPorChat ON UsuariosPorChat.id_chat = Chats.ID
             WHERE UsuariosPorChat.id_usuario = "${req.body.id_usuario}"
 
+
         `);
+
 
         if (contactos.length === 0) {
             return res.send({ ok: false, mensaje: "No se encontró el contacto" });
         }
         const contacto = contactos[0];
+
 
         res.send({
             ok: true,
@@ -489,6 +566,7 @@ app.post('/contacto', async (req, res) => {
                 nombre: contacto.nombre,
             }
         });
+
 
     } catch (error) {
         res.status(500).send({
@@ -499,14 +577,17 @@ app.post('/contacto', async (req, res) => {
     }
 });
 
+
 //eliminar contactos
 app.post('/eliminarContacto', async function (req, res) {
     try {
         const { id_chat, id_usuario } = req.body;
 
+
         await realizarQuery(
             `DELETE FROM UsuariosPorChat WHERE id_chat=${id_chat} AND id_usuario=${id_usuario}`
         );
+
 
         res.send({ ok: true, mensaje: "Contacto eliminado del chat" });
     } catch (error) {
@@ -518,6 +599,7 @@ app.post('/eliminarContacto', async function (req, res) {
     }
 });
 
+
 //subir mensajes a bbdd
 app.post('/mensajes', async (req, res) => {
     try {
@@ -526,6 +608,7 @@ app.post('/mensajes', async (req, res) => {
                 INSERT INTO Mensajes (contenido, fecha_hora, id_usuario, id_chat) VALUES
             ("${req.body.contenido}","${req.body.fecha_hora}",${req.body.id_usuario},${req.body.id_chat});`
         );
+
 
         res.send({ res: "ok", agregado: true });
     } catch (e) {
@@ -538,6 +621,8 @@ app.post('/mensajes', async (req, res) => {
 });
 
 
+
+
 app.get('/infoUsuario', async (req, res) => {
     try {
         const userId = req.session.userId; // segun chat gpt esto toma el id del usuario q inicio sesion
@@ -545,14 +630,17 @@ app.get('/infoUsuario', async (req, res) => {
             return res.status(401).send({ ok: false, mensaje: "Usuario no logueado" });
         }
 
+
         const usuario = await realizarQuery(
             "SELECT ID, nombre FROM Usuarios WHERE ID = ? LIMIT 1",
             [userId]
         );
 
+
         if (usuario.length === 0) {
             return res.send({ ok: false, mensaje: "Usuario no encontrado" });
         }
+
 
         res.send({
             ok: true,
@@ -563,9 +651,11 @@ app.get('/infoUsuario', async (req, res) => {
     }
 });
 
+
 app.post('/encontrarMensajesChat', async (req, res) => {
     const { chatSeleccionadoId } = req.body;
     console.log("Body recibido:", req.body);
+
 
     try {
         const respuesta = await realizarQuery(`
@@ -576,6 +666,7 @@ app.post('/encontrarMensajesChat', async (req, res) => {
             ORDER BY Mensajes.fecha_hora ASC
         `);
 
+
         res.json({ ok: true, mensajes: respuesta });
     } catch (error) {
         console.error("Error al traer mensajes:", error);
@@ -584,16 +675,22 @@ app.post('/encontrarMensajesChat', async (req, res) => {
 });
 
 
+
+
 //PEDIDOS ADMIN
+
 
 app.post('/agregarUsuario', async function (req, res) {
     console.log(req.body);
 
+
     try {
         const { nombre, contraseña, mail, es_admin } = req.body;
 
+
         // Verificar si ya existe el usuario
         const vector = await realizarQuery(`SELECT * FROM Usuarios WHERE nombre = "${nombre}"`);
+
 
         if (vector.length === 0) {
             await realizarQuery(`
@@ -605,17 +702,21 @@ app.post('/agregarUsuario', async function (req, res) {
             res.send({ agregado: false, mensaje: "Ya existe ese usuario" });
         }
 
+
     } catch (err) {
         console.error(err);
         res.status(500).send({ agregado: false, error: "Error en el servidor" });
     }
 });
 
+
 app.post('/cartarandom', async function (req, res) {
     console.log(req.body);
 
+
     try {
         const { nombre, contraseña, mail, es_admin } = req.body;
+
 
         // Verificar si ya existe el usuario
         const personajesJugador1 = await realizarQuery(`
@@ -625,6 +726,7 @@ app.post('/cartarandom', async function (req, res) {
                 SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
             `);
 
+
         if (vector.length === 0) {
             await realizarQuery(`
                 INSERT INTO Usuarios (nombre, contraseña, mail, puntaje, es_admin)
@@ -635,6 +737,7 @@ app.post('/cartarandom', async function (req, res) {
             res.send({ agregado: false, mensaje: "Ya existe ese usuario" });
         }
 
+
     } catch (err) {
         console.error(err);
         res.status(500).send({ agregado: false, error: "Error en el servidor" });
@@ -642,12 +745,16 @@ app.post('/cartarandom', async function (req, res) {
 });
 
 
+
+
 //BORRAR USUARIO
 app.delete('/borrarUsuario', async function (req, res) {
     try {
         const ID = req.body.ID;
 
+
         const vector = await realizarQuery(`SELECT * FROM Usuarios WHERE ID='${ID}'`);
+
 
         if (vector.length > 0) {
             await realizarQuery(`DELETE FROM Usuarios WHERE ID='${ID}'`);
@@ -655,6 +762,7 @@ app.delete('/borrarUsuario', async function (req, res) {
         } else {
             res.send({ borrado: false, mensaje: "Usuario no encontrado" });
         }
+
 
     } catch (error) {
         res.status(500).send({
@@ -665,13 +773,17 @@ app.delete('/borrarUsuario', async function (req, res) {
     }
 });
 
+
 //Crear partida
+
 
 app.post('/crearPartida', async (req, res) => {
     const { categoria_id, jugador1_id } = req.body;
 
+
     // Verifica si el cuerpo de la solicitud contiene datos
     console.log('Cuerpo de la solicitud:', req.body); // Verifica que el cuerpo esté llegando correctamente
+
 
     try {
         // Verifica si los datos necesarios están presentes
@@ -680,22 +792,28 @@ app.post('/crearPartida', async (req, res) => {
             return res.status(400).send({ ok: false, msg: 'Faltan datos en la solicitud' });
         }
 
+
         const oponente = await realizarQuery(`
             SELECT * FROM Usuarios WHERE esperando_categoria = ${categoria_id} AND ID != ${jugador1_id} LIMIT 1
         `);
+
 
         const categoria = await realizarQuery(`
             SELECT nombre FROM Categorias WHERE ID = ${categoria_id}
         `);
 
+
         if (categoria.length === 0) {
             return res.status(404).send({ ok: false, msg: "Categoría no encontrada" });
         }
 
+
         const nombreCategoria = categoria[0].nombre;
+
 
         if (oponente.length > 0) {
             const jugador2_id = oponente[0].ID;
+
 
             const personajesJugador1 = await realizarQuery(`
                 SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
@@ -704,17 +822,21 @@ app.post('/crearPartida', async (req, res) => {
                 SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
             `);
 
+
             const personajeJugador1_id = personajesJugador1[0].ID;
             const personajeJugador2_id = personajesJugador2[0].ID;
+
 
             await realizarQuery(`
                 INSERT INTO Partidas (jugador1_id, jugador2_id, personaje_jugador1_id, personaje_jugador2_id, estado)
                 VALUES (${jugador1_id}, ${jugador2_id}, ${personajeJugador1_id}, ${personajeJugador2_id}, 'en curso')
             `);
 
+
             await realizarQuery(`
                 UPDATE Usuarios SET esperando_categoria = NULL WHERE ID IN (${jugador1_id}, ${jugador2_id})
             `);
+
 
             io.emit("partidaCreada", {
                 ok: true,
@@ -723,12 +845,15 @@ app.post('/crearPartida', async (req, res) => {
                 userHost: jugador1_id,
             });
 
+
             return res.send({ ok: true, msg: "Partida creada con éxito", nombreCategoria });
+
 
         } else {
             await realizarQuery(`
                 UPDATE Usuarios SET esperando_categoria = ${categoria_id} WHERE ID = ${jugador1_id}
             `);
+
 
             io.emit("partidaCreada", {
                 ok: true,
@@ -738,8 +863,10 @@ app.post('/crearPartida', async (req, res) => {
                 nombreCategoria
             });
 
+
             return res.send({ ok: true, msg: "Esperando oponente...", esperando: true, nombreCategoria });
         }
+
 
     } catch (err) {
         console.error('Error en backend:', err);  // Asegúrate de capturar el error completo
@@ -750,22 +877,31 @@ app.post('/crearPartida', async (req, res) => {
 
 
 
+
+
+
+
 //arriesgar personaje
+
 
 app.post("/arriesgar", async (req, res) => {
     const { id_partida, id_jugador, nombre_arriesgado } = req.body;
 
+
     try {
         const [partida] = await realizarQuery(`SELECT * FROM Partidas WHERE ID = ${id_partida}`);
         if (!partida) return res.send({ ok: false, msg: "Partida no encontrada" });
+
 
         const esJugador1 = id_jugador === partida.jugador1_id;
         const personajeOponenteId = esJugador1
             ? partida.personaje_jugador2_id
             : partida.personaje_jugador1_id;
 
+
         const [personajeOponente] = await realizarQuery(`SELECT * FROM Personajes WHERE ID = ${personajeOponenteId}`);
         if (!personajeOponente) return res.send({ ok: false, msg: "No se encontró el personaje del oponente" });
+
 
         if (nombre_arriesgado.trim().toLowerCase() === personajeOponente.nombre.trim().toLowerCase()) {
             await realizarQuery(`
@@ -788,4 +924,8 @@ app.post("/arriesgar", async (req, res) => {
         res.status(500).send({ ok: false, msg: "Error en el servidor" });
     }
 });
+
+
+
+
 
