@@ -38,7 +38,6 @@ export default function Tablero() {
 
 
     const [segundos, setSegundos] = useState(60);
-    const [turno, setTurno] = useState(1);  // Supongo que aquí gestionas el turno
     const [jugadorActivo, setJugadorActivo] = useState(true);
 
     //timer
