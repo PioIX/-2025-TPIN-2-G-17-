@@ -61,12 +61,13 @@ io.on("connection", (socket) => {
 
     socket.on('joinRoom', data => {
         console.log("🚀 ~ io.on ~ req.session.room:", data.room)
+        console.log("ID:", data.idUser)
         if (req.session.room != undefined && req.session.room.length > 0)
             socket.leave(req.session.room);
         req.session.room = data.room;
         socket.join(data.room);
 
-        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: data.room });
+        io.to(req.session.room).emit('playerJoined', { room: data.room, idUser: data.idUser });
     });
 
     socket.on('pingAll', data => {
@@ -107,22 +108,16 @@ io.on("connection", (socket) => {
         socket.to(room).emit("carta del oponente", { carta2 });
     });
 
-    socket.on("comenzarRonda", (roomId, personajes) => {
-        const jugadoresEnSala = getJugadoresPorSala(roomId);
+    socket.on("finalizarTurno", (data) => {
+       
+    io.to(req.session.room).emit("startTurno", {room: data.room, msg: "Empieza turno" })
 
-        if (!Array.isArray(personajes)) {
-            console.error("Personajes no es un array:", personajes);
-            return;
-        }
 
-        let cartasDisponibles = [...personajes];  // Los personajes vienen del frontend
-        socket.to(room).emit("cartaAsignada", { color });
-        jugadoresEnSala.forEach(jugador => {
-            const cartaAleatoria = cartasDisponibles.splice(Math.floor(Math.random() * cartasDisponibles.length), 1)[0];
-            io.to(jugador.id).emit("cartaAsignada", cartaAleatoria);  // Emitir la carta al jugador
-            console.log("Carta asignada a", jugador.id, cartaAleatoria);
-        });
     });
+
+    socket.on("ordenJugadores", data => {
+        io.to(req.session.room).emit("ordenJugadoresFijo", {room: data.room, orden: data.orden})
+    })
 
     //timer 
     // Evento para cambiar el turno

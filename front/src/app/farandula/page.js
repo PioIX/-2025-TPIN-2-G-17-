@@ -29,6 +29,11 @@ export default function Tablero() {
     const [segundos, setSegundos] = useState(5);
     const [turno, setTurno] = useState(1);
     const [jugadorActivo, setJugadorActivo] = useState(1);
+    const [idRival, setIdRival] = useState(0);
+    const [ordenJugadores, setOrdenJugadores] = useState([localStorage.getItem("ID")]);
+
+    const [onOffTimer, setOnOffTimer] = useState(false)
+    const [timer, setTimer] = useState(null)
 
 
     async function traerPersonajes() {
@@ -73,7 +78,56 @@ export default function Tablero() {
             console.log("📩 Nuevo mensaje:", data);
             setMensajes((prev) => [...prev, data]);
         });
+
+        socket.on("joinedPlayer", (data) => {
+            if (localStorage.getItem("ID") != data.idUser) {
+                if (data.idUser != undefined && data.idUser != 0) {
+                    setIdRival(data.idUser)
+                    let aux = [localStorage.getItem("ID"), data.idUser]
+                    setJugadoresEnPartida(aux)
+                    socket.emit("ordenJugadores", { room: data.room, orden: aux })
+                }
+            }
+        })
+
+        socket.on("ordenJugadoresFijo", data => {
+            console.log("ORDEN DE JUGADORES", data.orden)
+            if (data.orden != []) {
+                setOrdenJugadores(data.orden)
+            }
+        })
+
+        socket.on("startTurno", (data) => {
+            setOnOffTimer(true);
+        })
+
     }, [socket]);
+
+
+
+    useEffect(() => {
+
+        if (onOffTimer) {
+            const timer = setInterval(() => {
+                setSegundos(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer);  // Detiene el temporizador cuando llega a 0
+                        CambioTurno();    // Cambia el turno
+                        return 0;  // Establece el temporizador en 0
+                    }
+                    return prev - 1;  // Resta un segundo
+                });
+            }, 1000);
+
+            setTimer(timer) // para apagarlo despues cuando termina el turno
+        }
+
+
+        return (() => {
+            clearInterval(timer)
+        })
+
+    }, [onOffTimer])
 
 
     function sendMessage() {
@@ -88,7 +142,7 @@ export default function Tablero() {
         if (!socket) return;
         let room = localStorage.getItem("room")
         if (room) {
-            socket.emit("joinRoom", { room: room });
+            socket.emit("joinRoom", { room: room, idUser: localStorage.getItem("ID") });
         }
     }, [socket])
 
@@ -158,6 +212,12 @@ export default function Tablero() {
 
         const room = localStorage.getItem("room");
         socket.emit("colorChange", { room, color: nuevoColor });
+
+
+
+        // si aca termina el turno, apago timer y apago
+        setOnOffTimer(false);
+        clearInterval(timer);
     }
 
     useEffect(() => {
@@ -276,7 +336,7 @@ export default function Tablero() {
         }, 1000);
         console.log("el jugador activo es: ", jugadorActivo);
         return () => clearInterval(timer); // Limpia el intervalo cuando el componente se desmonte
-        
+
     }, [jugadorActivo]);
 
     useEffect(() => {
@@ -291,9 +351,9 @@ export default function Tablero() {
             console.log("Emitiendo cambio de turno...");
             //socket.emit('cambiarTurno', { turnoSiguiente: turno === 1 ? 2 : 1 });
             if (turno === 1) {
-                setTurno(2);
+                setTurno(ordenJugadores[0]);
             } else {
-                setTurno(1);
+                setTurno(ordenJugadores[1]);
             }
             console.log("Turno cambiado a:", turno);
             setJugadorActivo(turno);  // El siguiente jugador ahora tiene el turno activo
@@ -316,6 +376,7 @@ export default function Tablero() {
 
             </div>
             <div className={styles.timer}>
+                {/*Agregar mensaje para si es mi turno o del rival, no por el id */}
                 <h1>Turno del Jugador {turno}</h1>
                 <p>Tiempo restante: {segundos} segundos</p>
                 {/* Aquí va el resto de tu juego */}

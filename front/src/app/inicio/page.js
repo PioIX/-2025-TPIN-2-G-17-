@@ -93,28 +93,28 @@ export default function LoginPage() {
     
     const irFamosos = () => {
         manejarSeleccionCategoria(2);
-        socket.emit("joinRoom", { room: "famosos" });
+        socket.emit("joinRoom", { room: "famosos", idUser: localStorage.getItem("ID") });
     };
 
     const irScaloneta = () => {
         manejarSeleccionCategoria(5);
-        socket.emit("joinRoom", { room: "scaloneta" });
+        socket.emit("joinRoom", { room: "scaloneta", idUser: localStorage.getItem("ID") });
     };
 
     const irProfesores = () => {
         manejarSeleccionCategoria(3);
-        socket.emit("joinRoom", { room: "profesores" });
+        socket.emit("joinRoom", { room: "profesores", idUser: localStorage.getItem("ID") });
     };
 
     const irFarandula = () => {
         manejarSeleccionCategoria(1);
         localStorage.setItem("room", "farandula");
-        socket.emit("joinRoom", { room: "farandula" });
+        socket.emit("joinRoom", { room: "farandula", idUser: localStorage.getItem("ID")});
     };
 
     const irCantantes = () => {
         manejarSeleccionCategoria(4);
-        socket.emit("joinRoom", { room: "cantantes" });
+        socket.emit("joinRoom", { room: "cantantes", idUser: localStorage.getItem("ID") });
     };
 
     return (
