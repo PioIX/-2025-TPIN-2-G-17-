@@ -449,12 +449,15 @@ export default function Tablero() {
                             texto={"No"}
                             onClick={(e) => {
                                 checkeado(e);
-                                cambiarTurno(); // Cambiar el turno a jugador1 después de responder
+                                cambiarTurno(); // Cambiar el turno a jugador1 después de 
                             }}
                         />
                     </>
                 ) : null}
             </div>
+
+
+        
 
 
             {/* Input de arriesgar, visible para ambos jugadores */}
