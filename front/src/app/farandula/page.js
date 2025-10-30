@@ -77,14 +77,14 @@ export default function Tablero() {
     }, []);
 
 
-    useEffect(()=>{
+    useEffect(() => {
         //ESTAMOS ACA
         let id = localStorage.getItem('ID');
         setIdPropio(id)
         console.log("Soy: ", id)
         if (!socket) return;
         const room = localStorage.getItem("room");
-        socket.emit("idJugadores", {room, id, idRival});
+        socket.emit("idJugadores", { room, id, idRival });
     }, [socket, isConnected])
 
 
@@ -99,7 +99,7 @@ export default function Tablero() {
 
 
         socket.on("idRival", (data) => {
-            console.log("Data: ", data, " IdPropio: " , idPropio)
+            console.log("Data: ", data, " IdPropio: ", idPropio)
             if (data.id != idPropio) {
                 console.log("📩 Id rival:", data);
                 setIdRival(data.id)
@@ -112,13 +112,13 @@ export default function Tablero() {
     }, [socket]);
 
 
-    useEffect(()=>{
+    useEffect(() => {
         if (idPropio && idRival) {
             console.log("Los ids existen: ", idPropio, " y ", idRival)
             if (idPropio > idRival) {
-                setJugador("jugador2")                
+                setJugador("jugador2")
             }
-            else{
+            else {
                 setJugador("jugador1")
             }
             if (flagYaEnvie == 0) {
@@ -126,7 +126,7 @@ export default function Tablero() {
                 const room = localStorage.getItem("room");
                 let id = localStorage.getItem('ID');
                 console.log("Enviando id del primero q entro")
-                socket.emit("idJugadores", {room, id, idRival});
+                socket.emit("idJugadores", { room, id, idRival });
             }
         }
     }, [idPropio, idRival])
@@ -138,7 +138,7 @@ export default function Tablero() {
 
         socket.on("cambiarTurno", (nuevoTurno) => {
             console.log("El turno ha cambiado:", nuevoTurno);
-            setTurno( nuevoTurno);  // Cambiar el turno del jugador
+            setTurno(nuevoTurno);  // Cambiar el turno del jugador
         });
 
 
@@ -149,7 +149,7 @@ export default function Tablero() {
     const cambiarTurno = () => {
         const room = localStorage.getItem("room");
         const nuevoTurno = turno === "jugador1" ? "jugador2" : "jugador1";
-        socket.emit("turnoCambio", {room, nuevoTurno});  // Emite el cambio de turno al servidor
+        socket.emit("turnoCambio", { room, nuevoTurno });  // Emite el cambio de turno al servidor
         setTurno(nuevoTurno); // Actualiza el estado local
     };
 
@@ -164,6 +164,31 @@ export default function Tablero() {
         // const data = { message, color}
         socket.emit("sendMessage", { room, message });
         console.log("Mensaje enviado:", nuevo);
+    }
+
+    function responder() {
+        return (
+            <>
+                <Boton
+                    color={"si"}
+                    value={"si"}
+                    texto={"Sí"}
+                    onClick={(e) => {
+                        checkeado(e);
+                        cambiarTurno(); // Cambiar el turno a jugador1 después de responder
+                    }}
+                />
+                <Boton
+                    color={"no"}
+                    value={"no"}
+                    texto={"No"}
+                    onClick={(e) => {
+                        checkeado(e);
+                        cambiarTurno(); // Cambiar el turno a jugador1 después de responder
+                    }}
+                />
+            </>
+        );
     }
 
 
@@ -412,11 +437,12 @@ export default function Tablero() {
             </div>
 
 
-            {/* Aquí es donde se gestionan los botones */}
+
+    
             <div className={styles.botonesRespuestas}>
                 {(turno === "jugador1" && jugador == "jugador1") || (turno === "jugador2" && jugador == "jugador2") ? (
                     <>
-                        {/* Si es el turno de jugador1, solo mostrar input de pregunta */}
+                        {/* Si es el turno del jugador, mostrar el input para hacer una pregunta */}
                         <Input
                             placeholder={"Hace una pregunta"}
                             color={"registro"}
@@ -427,37 +453,20 @@ export default function Tablero() {
                             texto={"Preguntar"}
                             onClick={() => {
                                 sendMessage(); // Enviar el mensaje
-                                cambiarTurno(); // Cambiar el turno a jugador2 después de preguntar
+                                // No cambiar el turno aún, esperar la respuesta del oponente
                             }}
                         />
                     </>
                 ) : (turno === "jugador2" && jugador == "jugador1") || (turno === "jugador1" && jugador == "jugador2") ? (
                     <>
-                        {/* Si es el turno de jugador2, solo mostrar botones de respuesta */}
-                        <Boton
-                            color={"si"}
-                            value={"si"}
-                            texto={"Sí"}
-                            onClick={(e) => {
-                                checkeado(e);
-                                cambiarTurno(); // Cambiar el turno a jugador1 después de responder
-                            }}
-                        />
-                        <Boton
-                            color={"no"}
-                            value={"no"}
-                            texto={"No"}
-                            onClick={(e) => {
-                                checkeado(e);
-                                cambiarTurno(); // Cambiar el turno a jugador1 después de 
-                            }}
-                        />
+                        {/* Si es el turno del oponente, mostrar los botones de respuesta */}
+                        {responder()}
                     </>
                 ) : null}
             </div>
 
 
-        
+
 
 
             {/* Input de arriesgar, visible para ambos jugadores */}
