@@ -55,6 +55,7 @@ io.use((socket, next) => {
 */
 
 let jugadores = {};
+let timers = {};
 
 io.on("connection", (socket) => {
     const req = socket.request;
@@ -124,6 +125,11 @@ io.on("connection", (socket) => {
         });
     });
 
+    socket.on('reiniciarTemporizador', (data) => {
+        const { room } = data;  // Recibe la sala
+        reiniciarTemporizador(room);  // Llama a la función de reiniciar temporizador
+    });
+
 });
 //                SELECT * FROM Personajes WHERE categoria_id = ${categoria_id} ORDER BY RAND() LIMIT 1
 app.get('/', function (req, res) {
@@ -141,6 +147,25 @@ function getJugadoresPorSala(roomId) {
  * res = response. Voy a responderle al cliente
  */
 
+
+//timer
+function reiniciarTemporizador(room) {
+    timers[room] = 60;  // Reinicia el temporizador a 60 segundos
+    io.to(room).emit('actualizarTemporizador', { timer: timers[room] });  // Emitir el temporizador actualizado
+}
+
+setInterval(() => {
+    for (let room in timers) {
+        if (timers[room] > 0) {
+            timers[room]--;  // Disminuir el temporizador cada segundo
+            io.to(room).emit('actualizarTemporizador', { timer: timers[room] });
+        } else {
+            // Cuando el temporizador llega a 0, cambiar el turno
+            io.to(room).emit('cambiarTurno', { turnoSiguiente: 'jugador 2' });  // O 'jugador 1' dependiendo de la lógica
+            reiniciarTemporizador(room);  // Reiniciar el temporizador
+        }
+    }
+}, 1000);
 
 //login
 
