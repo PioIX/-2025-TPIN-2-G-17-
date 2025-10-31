@@ -111,21 +111,14 @@ io.on("connection", (socket) => {
         socket.to(room).emit("updateColor", { color });
     });
 
-
-    socket.on('turnoCambio', ({room, nuevoTurno}) => {
+    socket.on('turnoCambio', ({ room, nuevoTurno }) => {
         io.to(room).emit('cambiarTurno', nuevoTurno);
     });
 
-
-       socket.on('idJugadores', ({room, id, idRival}) => {
-        console.log({room, id, idRival})
-        io.to(room).emit('idRival', {id: id, idRival: idRival});
+    socket.on('idJugadores', ({ room, id, idRival }) => {
+        console.log({ room, id, idRival })
+        io.to(room).emit('idRival', { id: id, idRival: idRival });
     });
-
-
-
-
-
 
     socket.on("cartaRandom", ({ room, carta, carta2 }) => {
         if (!carta || !carta2) {
@@ -145,7 +138,6 @@ io.on("connection", (socket) => {
         // Enviar la carta al oponente
         socket.to(room).emit("carta del oponente", { carta2 });
     });
-
 
     socket.on("comenzarRonda", (roomId, personajes) => {
         const jugadoresEnSala = getJugadoresPorSala(roomId);
@@ -204,15 +196,14 @@ setInterval(() => {
             io.to(room).emit('actualizarTemporizador', { timer: timers[room] });
         } else {
             // Cuando el temporizador llega a 0, cambiar el turno
-            io.to(room).emit('cambiarTurno', { turnoSiguiente: 'jugador 2' });  // O 'jugador 1' dependiendo de la lógica
+            //io.to(room).emit('cambiarTurno', { turnoSiguiente: 'jugador 2' });  // O 'jugador 1' dependiendo de la lógica
+            io.to(room).emit('cambiarTurno', nuevoTurno);
             reiniciarTemporizador(room);  // Reiniciar el temporizador
         }
     }
 }, 1000);
 
 //login
-
-
 app.post('/login', async function (req, res) {
     console.log(req.body);
     try {
